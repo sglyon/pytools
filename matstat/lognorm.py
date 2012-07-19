@@ -5,7 +5,6 @@ Author: Spencer Lyon
 """
 import numpy as np
 from math import sqrt, pi
-from normal import normal
 from scipy.special import erf
 
 class lognorm:
