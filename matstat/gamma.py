@@ -3,39 +3,50 @@ Created July 19, 2012
 
 Author: Spencer Lyon
 """
+from __future__ import division
+from math import sqrt
 import numpy as np
-from math import exp, pi, sqrt
-from scipy.special import erf, ndtri
+from scipy.special import gamma as Fgamma
+from scipy.special import gammainc, gammaincinv
 
-class Normal:
-    def __init__(self, mu = 0, sigma = 1.):
+
+class Gamma:
+    """
+    This distribution follos the form where k is the shape parameter and theta
+    is the scale parameter rather then the alternative where alpha is the shape
+    and beta is the rate parameter.
+
+    If you want to pass in the rate you should say that theta= 1 / rate
+    """
+    def __init__(self, k=.5, theta=.5):
         """
         Initializes an object of distribution type. We instantiate the object
         as well as some common statistics about it. This will also check to
         make sure paramaters have acceptable values and raise a ValueError if
         they don't.
+
+        Notes
+        -----
+
         """
-        if mu < 0:
-            raise ValueError('mean must be non-negative')
-        if sigma == 0:
-            raise ValueError(" Standard Deviation cannot be equal to 0")
-        else:
-            self.support = '(-inf, inf)'
-            self.mean = mu
-            self.stdev = sigma
-            self.varainge = sigma ** 2
-            self.skewness = 0.0
-            self.ex_kurtosis = 0.0
-            self.median = mu
-            self.mode = mu
+        if k < 0 or theta < 0:
+            raise ValueError('k and theta must be positive')
+        self.k = k
+        self.theta = theta
+        self.support = '[0, inf)'
+        self.mean = k * theta
+        self.median = None
+        self.mode = (k - 1) * theta if k >= 1 else None
+        self.variance = k * theta ** 2
+        self.skewness = 2. / sqrt(k)
+        self.ex_kurtosis = 6. / k
 
 
     def pdf(self, x):
         """
-        Computes the probability density function of the normal distribution
+        Computes the probability density function of the distribution
         at the point x. The pdf is defined as follows:
-            f(x|mu, sigma) = 1/sqrt(2 * pi * sigma ** 2) * \
-                             exp( - ((x - mu) / (sqrt(2) * sigma)) ** 2)
+            f(x|) =
 
         Parameters
         ----------
@@ -49,19 +60,17 @@ class Normal:
             pdf: array, dtype=float, shape=(m x n)
                 The pdf at each point in x.
         """
-        root_2_pi = sqrt(2 * pi)
-        coef = 1. / (self.stdev * root_2_pi)
-        pdf = np.exp( - ((x - self.mean) / (sqrt(2) * self.stdev)) ** 2)
-        pdf *= coef
-
+        k = self.k
+        theta = self.theta
+        pdf = 1 / (Fgamma(k) * theta ** k) * x ** (k - 1) * np.exp(-x / theta)
         return pdf
 
 
     def cdf(self, x):
         """
-        Computes the cumulative distribution function of the normal
+        Computes the cumulative distribution function of the
         distribution at the point(s) x. The cdf is defined as follows:
-            F(x|mu, sigma) = 1 / 2 * (1 + erf((x - mu)/ (sigma * sqrt(2))))
+            F(x|) =
 
         Parameters
         ----------
@@ -75,7 +84,7 @@ class Normal:
         cdf: array, dtype=float, shape=(m x n)
             The cdf at each point in x.
         """
-        cdf = 1 / 2. * (1 + erf((x - self.mean) / (self.stdev * sqrt(2))))
+        cdf = 1 / Fgamma(self.k) * gammainc(self.k, x / self.theta)
 
         return cdf
 
@@ -94,8 +103,7 @@ class Normal:
         draw: array, dtype=float, shape=(n x 1)
             The n x 1 random draws from the distribution.
         """
-        draw = np.random.randn(n)
-        draw = draw * self.stdev + self.mean
+        draw = np.random.standard_gamma(self.k, n) * self.theta
 
         return draw
 
@@ -145,6 +153,6 @@ class Normal:
         """
         if x >=0 or x <=1:
             raise ValueError('x must be between 0 and 1, exclusive')
-        ppf = ndtri(x)
+        ppf = gammaincinv(self.k, x) * self.theta
 
         return ppf

@@ -3,39 +3,36 @@ Created July 19, 2012
 
 Author: Spencer Lyon
 """
+from __future__ import division
 import numpy as np
-from math import exp, pi, sqrt
-from scipy.special import erf, ndtri
+from math import sqrt
+from scipy.special import gamma, chdtr, chdtri
 
-class Normal:
-    def __init__(self, mu = 0, sigma = 1.):
+class Chi_square:
+    def __init__(self, k=2):
         """
         Initializes an object of distribution type. We instantiate the object
         as well as some common statistics about it. This will also check to
         make sure paramaters have acceptable values and raise a ValueError if
         they don't.
         """
-        if mu < 0:
-            raise ValueError('mean must be non-negative')
-        if sigma == 0:
-            raise ValueError(" Standard Deviation cannot be equal to 0")
-        else:
-            self.support = '(-inf, inf)'
-            self.mean = mu
-            self.stdev = sigma
-            self.varainge = sigma ** 2
-            self.skewness = 0.0
-            self.ex_kurtosis = 0.0
-            self.median = mu
-            self.mode = mu
+        if k < 0 or type(k) != int:
+            raise ValueError('k must be a positive iteger')
+        self.k = k
+        self.support = '[0, inf)'
+        self.mean = k
+        self.median = k * (1 - 2 / (9 * k)) ** 3
+        self.mode = max(k - 2, 0)
+        self.variance = 2 * k
+        self.skewness = sqrt(8. / k)
+        self.ex_kurtosis = 12. / k
 
 
     def pdf(self, x):
         """
-        Computes the probability density function of the normal distribution
+        Computes the probability density function of the distribution
         at the point x. The pdf is defined as follows:
-            f(x|mu, sigma) = 1/sqrt(2 * pi * sigma ** 2) * \
-                             exp( - ((x - mu) / (sqrt(2) * sigma)) ** 2)
+            f(x|) =
 
         Parameters
         ----------
@@ -49,19 +46,17 @@ class Normal:
             pdf: array, dtype=float, shape=(m x n)
                 The pdf at each point in x.
         """
-        root_2_pi = sqrt(2 * pi)
-        coef = 1. / (self.stdev * root_2_pi)
-        pdf = np.exp( - ((x - self.mean) / (sqrt(2) * self.stdev)) ** 2)
-        pdf *= coef
-
+        k = self.k
+        pdf = (1. / (2 ** (k / 2) * gamma(k / 2.))) * \
+                    x ** (k / 2. - 1.) * np.exp(- x / 2.)
         return pdf
 
 
     def cdf(self, x):
         """
-        Computes the cumulative distribution function of the normal
+        Computes the cumulative distribution function of the
         distribution at the point(s) x. The cdf is defined as follows:
-            F(x|mu, sigma) = 1 / 2 * (1 + erf((x - mu)/ (sigma * sqrt(2))))
+            F(x|) =
 
         Parameters
         ----------
@@ -75,7 +70,7 @@ class Normal:
         cdf: array, dtype=float, shape=(m x n)
             The cdf at each point in x.
         """
-        cdf = 1 / 2. * (1 + erf((x - self.mean) / (self.stdev * sqrt(2))))
+        cdf = chdtr(self.k, x)
 
         return cdf
 
@@ -94,8 +89,7 @@ class Normal:
         draw: array, dtype=float, shape=(n x 1)
             The n x 1 random draws from the distribution.
         """
-        draw = np.random.randn(n)
-        draw = draw * self.stdev + self.mean
+        draw = np.random.chisquare(self.k, n)
 
         return draw
 
@@ -145,6 +139,6 @@ class Normal:
         """
         if x >=0 or x <=1:
             raise ValueError('x must be between 0 and 1, exclusive')
-        ppf = ndtri(x)
+        ppf = chdtri(self.k, 1. - x)
 
         return ppf

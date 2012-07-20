@@ -4,38 +4,43 @@ Created July 19, 2012
 Author: Spencer Lyon
 """
 import numpy as np
-from math import exp, pi, sqrt
-from scipy.special import erf, ndtri
+from math import sqrt
+from scipy.special import beta as Fbeta
+from scipy.special import betainc as Fbetainc
+from scipy.special import btdtri
 
-class Normal:
-    def __init__(self, mu = 0, sigma = 1.):
+class Beta:
+    def __init__(self, alpha=.1, beta=.1):
         """
         Initializes an object of distribution type. We instantiate the object
         as well as some common statistics about it. This will also check to
         make sure paramaters have acceptable values and raise a ValueError if
         they don't.
         """
-        if mu < 0:
+        if alpha < 0 or beta < 0:
             raise ValueError('mean must be non-negative')
-        if sigma == 0:
-            raise ValueError(" Standard Deviation cannot be equal to 0")
         else:
-            self.support = '(-inf, inf)'
-            self.mean = mu
-            self.stdev = sigma
-            self.varainge = sigma ** 2
-            self.skewness = 0.0
-            self.ex_kurtosis = 0.0
-            self.median = mu
-            self.mode = mu
+            self.support = '(0, 1)'
+            self.alpha = alpha
+            self.beta = beta
+            self.mean = alpha / (alpha + beta)
+            self.median = None
+            self.mode = (alpha - 1) / (alpha + beta - 2) \
+                        if (alpha > 1 and beta > 1) else None
+            self.variance = alpha * beta / ((alpha + beta ) **2 +
+                                            (alpha + beta +1))
+            self.skewness = (2 * (beta - alpha ) * sqrt(alpha + beta + 1)) / \
+                             ((alpha + beta + 2) * sqrt(alpha * beta))
+            self.ex_kurtosis = None
 
 
     def pdf(self, x):
         """
-        Computes the probability density function of the normal distribution
-        at the point x. The pdf is defined as follows:
-            f(x|mu, sigma) = 1/sqrt(2 * pi * sigma ** 2) * \
-                             exp( - ((x - mu) / (sqrt(2) * sigma)) ** 2)
+        Computes the probability density function of the  beta distribution
+        at the point x. The pdf is defined as follows (alpha -> a, beta -> b):
+            f(x|a, b) =(x ** (a - 1) * (1 - x) **(b - 1)) / Fbeta(a, b)
+
+        Where Fbeta is the beta function.
 
         Parameters
         ----------
@@ -49,19 +54,19 @@ class Normal:
             pdf: array, dtype=float, shape=(m x n)
                 The pdf at each point in x.
         """
-        root_2_pi = sqrt(2 * pi)
-        coef = 1. / (self.stdev * root_2_pi)
-        pdf = np.exp( - ((x - self.mean) / (sqrt(2) * self.stdev)) ** 2)
-        pdf *= coef
-
+        alpha = self.alpha
+        beta = self.beta
+        pdf = (x ** (alpha - 1) * (1 - x) **(beta - 1)) / Fbeta(alpha, beta)
         return pdf
 
 
     def cdf(self, x):
         """
-        Computes the cumulative distribution function of the normal
-        distribution at the point(s) x. The cdf is defined as follows:
-            F(x|mu, sigma) = 1 / 2 * (1 + erf((x - mu)/ (sigma * sqrt(2))))
+        Computes the cumulative distribution function of the
+        distribution at the point(s) x. The cdf is defined as follows (where
+        alpha->a beta ->b, Fbetainc is incomplete beta function and Fbeta is the
+        complete beta function):
+            F(x|a, b) = Fbetainc(a, b, x) / Fbeta(a, b)
 
         Parameters
         ----------
@@ -75,7 +80,9 @@ class Normal:
         cdf: array, dtype=float, shape=(m x n)
             The cdf at each point in x.
         """
-        cdf = 1 / 2. * (1 + erf((x - self.mean) / (self.stdev * sqrt(2))))
+        alpha = self.alpha
+        beta = self.beta
+        cdf = Fbetainc(alpha, beta, x) / Fbeta(alpha, beta)
 
         return cdf
 
@@ -94,8 +101,7 @@ class Normal:
         draw: array, dtype=float, shape=(n x 1)
             The n x 1 random draws from the distribution.
         """
-        draw = np.random.randn(n)
-        draw = draw * self.stdev + self.mean
+        draw = np.random.beta(self.alpha, self.beta, n)
 
         return draw
 
@@ -145,6 +151,6 @@ class Normal:
         """
         if x >=0 or x <=1:
             raise ValueError('x must be between 0 and 1, exclusive')
-        ppf = ndtri(x)
+        ppf = btdtri(self.alpha, self.beta, x)
 
         return ppf
