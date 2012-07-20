@@ -2,6 +2,9 @@
 Created July 19, 2012
 
 Author: Spencer Lyon
+7-19-12:
+    Tested lognorm, norma, beta, chi, chi_square, exponential, f_dist, gamma
+    Results: all functioning properly.
 """
 from lognorm import Lognorm
 from normal import Normal
@@ -46,4 +49,3 @@ print 'exp.pdf(x): ', exp.pdf(x)
 print 'f.pdf(x): ', f.pdf(x)
 print 'gamma.pdf(x): ', gamma.pdf(x)
 
-## TODO: Fix beta CDF, gamma CDF, chi PDF, f PDF

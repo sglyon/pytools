@@ -51,8 +51,8 @@ class Chi:
                 The pdf at each point in x.
         """
         k = self.k
-        pdf = 2 ** (1 - k / 2) * x ** (k - 1) * np.exp((x ** 2) / 2) / \
-                gamma(k / 2)
+        pdf = 2 ** (1 - k / 2.) * x ** (k - 1.) * np.exp((-x ** 2.) / 2.) / \
+                gamma(k / 2.)
 
         return pdf
 

@@ -6,8 +6,7 @@ Author: Spencer Lyon
 import numpy as np
 from math import sqrt
 from scipy.special import beta as Fbeta
-from scipy.special import betainc as Fbetainc
-from scipy.special import btdtri
+from scipy.special import btdtr, btdtri
 
 class Beta:
     def __init__(self, alpha=.1, beta=.1):
@@ -82,7 +81,7 @@ class Beta:
         """
         alpha = self.alpha
         beta = self.beta
-        cdf = Fbetainc(alpha, beta, x) / Fbeta(alpha, beta)
+        cdf = btdtr(alpha, beta, x)
 
         return cdf
 

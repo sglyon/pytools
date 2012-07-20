@@ -53,8 +53,8 @@ class F_dist:
         """
         d1 = self.d1
         d2 = self.d2
-        pdf = np.sqrt((d1 * x) ** d1 * d2 ** d2 / ((d1 * x + d2)**(d1 + d2))) /\
-             x * beta(d1 / 2, d2 / 2)
+        pdf = np.sqrt(((d1 * x) ** d1 * (d2**d2)) / (d1 * x + d2)**(d1 + d2))/ \
+                (x * beta (d1 / 2., d2 / 2.))
         return pdf
 
 

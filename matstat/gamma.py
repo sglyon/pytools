@@ -84,7 +84,7 @@ class Gamma:
         cdf: array, dtype=float, shape=(m x n)
             The cdf at each point in x.
         """
-        cdf = 1 / Fgamma(self.k) * gammainc(self.k, x / self.theta)
+        cdf =  gammainc(self.k, x / self.theta) 
 
         return cdf
 
