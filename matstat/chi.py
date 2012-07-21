@@ -7,14 +7,34 @@ from __future__ import division
 import numpy as np
 from math import sqrt
 from scipy.special import gamma, gammainc, gammaincinv
+import matplotlib.pyplot as plt
 
 class Chi:
     def __init__(self, k=1):
         """
-        Initializes an object of distribution type. We instantiate the object
-        as well as some common statistics about it. This will also check to
-        make sure paramaters have acceptable values and raise a ValueError if
-        they don't.
+        Initializes an object of chi distribution type. We instantiate the
+        object as well as some common statistics about it. This will make sure
+        k has acceptable values and raise a ValueError if it doesn't.
+
+        Methods
+        -------
+        pdf(x): pdf evaluated at each entry in x.
+        cdf(x): cdf evaluated at each entry in x.
+        rand_draw(n): n random draws from the distribution
+        sf(x): survival function (1 - CDF) at x
+        ppf(x): percent point function (inverse of cdf)
+        plot_pdf(low, high): plots pdf with x going from low to high.
+        plot_cdf(low, high): plots cdf with x going from low to high.
+
+        Notes
+        -----
+        This class is dependent on matplotlib, scipy, math, and numpy.
+
+        References
+        ----------
+        [1]: www.http://mathworld.wolfram.com/ChiDistribution.html
+        [2]: www.http://en.wikipedia.org/wiki/Chi_distribution
+        [3]: scipy.stats.distributions
         """
         if k < 0 or type(k) != int:
             raise ValueError('k must be a positive iteger')
@@ -95,7 +115,7 @@ class Chi:
         draw: array, dtype=float, shape=(n x 1)
             The n x 1 random draws from the distribution.
         """
-        draw = sqrt(np.random.chisquare(k, n))
+        draw = np.sqrt(np.random.chisquare(self.k, n))
 
         return draw
 
@@ -148,3 +168,82 @@ class Chi:
         ppf = sqrt(2 * gammaincinv(k *.5, x))
 
         return ppf
+
+
+    def plot_pdf(self, low, high):
+        """
+        Plots the pdf of the distribution from low to high.
+
+        Parameters
+        ----------
+        low: number, float
+            The lower bound you want to see on the x-axis in the plot.
+
+        high: number, float
+            The upper bound you want to see on the x-axis in the plot.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        While this has no return values, the plot is generated and shown.
+        """
+        x = np.linspace(low, high, 300)
+        plt.figure()
+        plt.plot(x, self.pdf(x))
+        plt.title(r'$\chi$ (%.1f): PDF from %.2f to %.2f' %(self.k, low,  high))
+        plt.show()
+
+        return
+
+
+    def plot_cdf(self, low, high):
+        """
+        Plots the cdf of the distribution from low to high.
+
+        Parameters
+        ----------
+        low: number, float
+            The lower bound you want to see on the x-axis in the plot.
+
+        high: number, float
+            The upper bound you want to see on the x-axis in the plot.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        While this has no return values, the plot is generated and shown.
+        """
+        x = np.linspace(low, high, 400)
+        plt.figure()
+        plt.plot(x, self.cdf(x))
+        plt.title(r'$\chi$ (%.1f): PDF from %.2f to %.2f' %(self.k, low,  high))
+        plt.show()
+
+        return
+
+
+if __name__ == '__main__':
+    x = np.array([1.2, 1.5, 2.1, 5.4])
+    k = 4
+    chi = Chi(k)
+    print 'support = ', chi.support
+    print 'mean = ', chi.mean
+    print 'median= ', chi.median
+    print 'mode = ', chi.mode
+    print 'variance = ', chi.variance
+    print 'skewness = ', chi.skewness
+    print 'Excess kurtosis = ', chi.ex_kurtosis
+    print 'x = ', x
+    print 'pdf at x = ', chi.pdf(x)
+    print 'cdf at x = ', chi.cdf(x)
+    print '6 random_draws ', chi.rand_draw(6)
+    print 'Plot of pdf from %.2f to %.2f ' % (0, 6)
+    print 'Plot of cdf from %.2f to %.2f ' % (0, 6)
+    chi.plot_pdf(0, 6)
+    chi.plot_cdf(0, 6)

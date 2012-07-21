@@ -1,19 +1,19 @@
 """
-Created July 19, 2012
+Created July 20, 2012
 
 Author: Spencer Lyon
 """
 from __future__ import division
-from math import log, exp
+from math import sqrt, pi
 import numpy as np
-import matplotlib.pyplot as plt
+from scipy.special import beta, gamma, stdtr, stdtrit
 
-class Exponential:
-    def __init__(self, lamb=1):
+class Student_t:
+    def __init__(self, nu=3):
         """
-        Initializes an object of exponential distribution type. We instantiate
-        the object as well as some common statistics about it. This will make
-        sure lambda has acceptable values and raise a ValueError if it doesn't.
+        Initializes an object of student-t distribution type. We instantiate the
+        object as well as some common statistics about it. This will also make
+        sure nu has acceptable values and raise a ValueError if it doesn't
 
         Methods
         -------
@@ -27,31 +27,34 @@ class Exponential:
 
         Notes
         -----
-        This class is dependent on matplotlib, math, and numpy.
+        This class is dependent on matplotlib, scipy, and numpy.
 
         References
         ----------
-        [1]: www.http://mathworld.wolfram.com/ExponentialDistribution.html
-        [2]: www.http://en.wikipedia.org/wiki/Exponential_distribution
+        [1]: www.http://mathworld.wolfram.com/Studentst-Distribution.html
+        [2]: www.http://en.wikipedia.org/wiki/Student_t_distribution
         [3]: scipy.stats.distributions
         """
-        if lamb < 0:
-            raise ValueError('lamb must be positive')
-        self.lamb = lamb
-        self.support = '[0, inf)'
-        self.mean = lamb ** (-1.)
-        self.median = self.mean * log(2)
-        self.mode = 0.0
-        self.variance = lamb ** (-2.)
-        self.skewness = 2.
-        self.ex_kurtosis = 6.
+        if type(nu) != int or nu < 0:
+            raise ValueError('nu must be a positive integer')
+        self.nu = nu
+        self.support = '(-inf, inf)'
+        self.mean =  0. if nu > 1 else None
+        self.median = 0.
+        self.mode = 0.
+        self.variance = nu / (nu - 2) if nu > 2 else (None if nu<1 else np.inf)
+        self.skewness =  0 if nu > 3 else None
+        self.ex_kurtosis = 6 / (nu - 4) if nu > 4 else (None if n<2 else np.inf)
 
 
     def pdf(self, x):
         """
         Computes the probability density function of the distribution
         at the point x. The pdf is defined as follows:
-            f(x|lamb) = lamb * exp(-lamb *x)
+            f(x|) = gamma((nu + 1)  / 2) / (sqrt(nu * pi) * gamma (nu / 2)) * \
+                (1 + x ** 2 / nu) ** ( - ( nu + 1)  / 2)
+
+        Where gamma is the gamma function.
 
         Parameters
         ----------
@@ -65,15 +68,20 @@ class Exponential:
             pdf: array, dtype=float, shape=(m x n)
                 The pdf at each point in x.
         """
-        pdf = self.lamb * np.exp(-self.lamb * x)
+        nu = self.nu
+        pdf = gamma((nu + 1)  / 2) / (sqrt(nu * pi) * gamma (nu / 2)) * \
+                (1 + x ** 2 / nu) ** ( - ( nu + 1)  / 2)
         return pdf
 
 
     def cdf(self, x):
         """
-        Computes the cumulative distribution function of the
+        Computes the cumulative distribution function of they
         distribution at the point(s) x. The cdf is defined as follows:
-            F(x|lamb) = 1 - exp(-lamb * x)
+            F(x| nu) = 1 - 1 / 2 *  I_x(t) *(nu / 2, 1 / 2)
+
+        where x(t) = nu / (t ** 2 + u) and I_x is the regularized incomplete
+        beta function.
 
         Parameters
         ----------
@@ -87,7 +95,7 @@ class Exponential:
         cdf: array, dtype=float, shape=(m x n)
             The cdf at each point in x.
         """
-        cdf = 1 - np.exp(-self.lamb * x)
+        cdf = stdtr(self.nu, x)
 
         return cdf
 
@@ -106,7 +114,7 @@ class Exponential:
         draw: array, dtype=float, shape=(n x 1)
             The n x 1 random draws from the distribution.
         """
-        draw = np.random.standard_exponential(n)
+        draw = np.random.standard_t(self.nu, n)
 
         return draw
 
@@ -154,87 +162,6 @@ class Exponential:
         ppf: array, dtype=float, shape=(m x n)
             The ppf at each point in x.
         """
-        if x >=0 or x <=1:
-            raise ValueError('x must be between 0 and 1, exclusive')
-        ppf = np.log1p(x)
+        ppf = stdtrit(self.nu, x)
 
         return ppf
-
-
-    def plot_pdf(self, low, high):
-        """
-        Plots the pdf of the distribution from low to high.
-
-        Parameters
-        ----------
-        low: number, float
-            The lower bound you want to see on the x-axis in the plot.
-
-        high: number, float
-            The upper bound you want to see on the x-axis in the plot.
-
-        Returns
-        -------
-        None
-
-        Notes
-        -----
-        While this has no return values, the plot is generated and shown.
-        """
-        x = np.linspace(low, high, 300)
-        plt.figure()
-        plt.plot(x, self.pdf(x))
-        plt.title('exp(%.1f): PDF from %.2f to %.2f' %(self.lamb, low,  high))
-        plt.show()
-
-        return
-
-
-    def plot_cdf(self, low, high):
-        """
-        Plots the cdf of the distribution from low to high.
-
-        Parameters
-        ----------
-        low: number, float
-            The lower bound you want to see on the x-axis in the plot.
-
-        high: number, float
-            The upper bound you want to see on the x-axis in the plot.
-
-        Returns
-        -------
-        None
-
-        Notes
-        -----
-        While this has no return values, the plot is generated and shown.
-        """
-        x = np.linspace(low, high, 400)
-        plt.figure()
-        plt.plot(x, self.cdf(x))
-        plt.title('exp(%.1f): PDF from %.2f to %.2f' %(self.lamb, low,  high))
-        plt.show()
-
-        return
-
-
-if __name__ == '__main__':
-    x = np.array([1.2, 1.5, 2.1, 5.4])
-    lamb = 1.5
-    ex = Exponential(lamb)
-    print 'support = ', ex.support
-    print 'mean = ', ex.mean
-    print 'median= ', ex.median
-    print 'mode = ', ex.mode
-    print 'variance = ', ex.variance
-    print 'skewness = ', ex.skewness
-    print 'Excess kurtosis = ', ex.ex_kurtosis
-    print 'x = ', x
-    print 'pdf at x = ', ex.pdf(x)
-    print 'cdf at x = ', ex.cdf(x)
-    print '6 random_draws ', ex.rand_draw(6)
-    print 'Plot of pdf from %.2f to %.2f ' % (0, 6)
-    print 'Plot of cdf from %.2f to %.2f ' % (0, 6)
-    ex.plot_pdf(0, 6)
-    ex.plot_cdf(0, 6)

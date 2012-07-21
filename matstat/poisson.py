@@ -1,20 +1,21 @@
 """
-Created July 19, 2012
+Created July 20, 2012
 
 Author: Spencer Lyon
 """
 from __future__ import division
+from math import floor, exp
 import numpy as np
-from math import sqrt
-from scipy.special import gamma, chdtr, chdtri
+from scipy.special import pdtr, pdtrik
+from scipy.misc import factorial
 import matplotlib.pyplot as plt
 
-class Chi_square:
-    def __init__(self, k=2):
+class Poisson:
+    def __init__(self, lamb=4):
         """
-        Initializes an object of chi-squared distribution type. We instantiate
-        the object as well as some common statistics about it. This will make
-        sure k has acceptable values and raise a ValueError if it doesn't.
+        Initializes an object of Poisson distribution type. We instantiate the
+        object as well as some common statistics about it. This will also
+        make sure lamb has acceptable values and raise a ValueError if it don't.
 
         Methods
         -------
@@ -28,61 +29,52 @@ class Chi_square:
 
         Notes
         -----
-        This class is dependent on matplotlib, scipy, math, and numpy.
+        This class is dependent on math, numpy, matplotlib, and scipy.
 
         References
         ----------
-        [1]: www.http://mathworld.wolfram.com/Chi-SquaredDistribution.html
-        [2]: www.http://en.wikipedia.org/wiki/Chi-squared_distribution
+        [1]: www.http://mathworld.wolfram.com/PoissonDistribution.html
+        [2]: www.http://en.wikipedia.org/wiki/Poisson_distribution
         [3]: scipy.stats.distributions
         """
-        if k < 0 or type(k) != int:
-            raise ValueError('k must be a positive iteger')
-        self.k = k
-        self.support = '[0, inf)'
-        self.mean = k
-        self.median = k * (1 - 2 / (9 * k)) ** 3
-        self.mode = max(k - 2, 0)
-        self.variance = 2 * k
-        self.skewness = sqrt(8. / k)
-        self.ex_kurtosis = 12. / k
+        self.lamb = lamb
+        self.support = 'k el {0, 2, 3, ...}'
+        self.mean = lamb
+        self.median = floor(lamb + 1 / 3 - 0.02 / lamb)
+        self.mode = floor(lamb)
+        self.variance = lamb
+        self.skewness = lamb ** (-1 / 2)
+        self.ex_kurtosis = 1. / lamb
 
 
-    def pdf(self, x):
+    def pmf(self, x):
         """
-        Computes the probability density function of the distribution
+        Computes the probability mass function of the distribution
         at the point x. The pdf is defined as follows:
-            f(x|k) =(1 / (2**(k/2) * gamma(k/2))) * x**(k / 2 - 1) * exp(-x/2)
+            f(x| lamb, k) = lamb ** k / k! * exp( - lamb)
 
         Parameters
         ----------
             x: array, dtype=float, shape=(m x n)
-                The value(s) at which the user would like the pdf evaluated.
-                If an array is passed in, the pdf is evaluated at every point
+                The value(s) at which the user would like the pmf evaluated.
+                If an array is passed in, the pmf is evaluated at every point
                 in the array and an array of the same size is returned.
 
         Returns
         -------
-            pdf: array, dtype=float, shape=(m x n)
-                The pdf at each point in x.
+            pmf: array, dtype=float, shape=(m x n)
+                The pmf at each point in x.
         """
-        if (x<0).any():
-            raise ValueError('at least one value of x is not in the support of \
-                             the dist. X must be non-negative.')
-        k = self.k
-        pdf = (1. / (2 ** (k / 2) * gamma(k / 2.))) * \
-                    x ** (k / 2. - 1.) * np.exp(- x / 2.)
-        return pdf
+
+        pmf = self.lamb ** x / factorial(x) * exp(- self.lamb)
+        return pmf
 
 
     def cdf(self, x):
         """
         Computes the cumulative distribution function of the
         distribution at the point(s) x. The cdf is defined as follows:
-            F(x|k) = gammainc(k/2, x/2) / gamma(k/2)
-
-        Where gammainc and gamma are the incomplete gamma and gamma functions,
-        respectively.
+            F(x|) =
 
         Parameters
         ----------
@@ -96,7 +88,8 @@ class Chi_square:
         cdf: array, dtype=float, shape=(m x n)
             The cdf at each point in x.
         """
-        cdf = chdtr(self.k, x)
+        floored = np.floor(x)
+        cdf = pdtr(floored, self.lamb)
 
         return cdf
 
@@ -115,7 +108,7 @@ class Chi_square:
         draw: array, dtype=float, shape=(n x 1)
             The n x 1 random draws from the distribution.
         """
-        draw = np.random.chisquare(self.k, n)
+        draw = np.random.poisson(self.lamb, n)
 
         return draw
 
@@ -163,24 +156,25 @@ class Chi_square:
         ppf: array, dtype=float, shape=(m x n)
             The ppf at each point in x.
         """
-        if x >=0 or x <=1:
-            raise ValueError('x must be between 0 and 1, exclusive')
-        ppf = chdtri(self.k, 1. - x)
+        vals = np.ceil(pdtrik(x, self.lamb))
+        vals1 = vals - 1
+        temp = ptdr(vals1, self.lamb)
+        ppf = np.where((temp >= x), vals1, vals)
 
         return ppf
 
 
-    def plot_pdf(self, low, high):
+    def plot_pmf(self, low, high):
         """
-        Plots the pdf of the distribution from low to high.
+        Plots the pdf of the distribution where k goes from low to high.
 
         Parameters
         ----------
         low: number, float
-            The lower bound you want to see on the x-axis in the plot.
+            The lower bound you want to see on the k in the plot.
 
         high: number, float
-            The upper bound you want to see on the x-axis in the plot.
+            The upper bound you want to see on the k in the plot.
 
         Returns
         -------
@@ -190,10 +184,20 @@ class Chi_square:
         -----
         While this has no return values, the plot is generated and shown.
         """
-        x = np.linspace(low, high, 300)
+        low, high = int(min(low, high)), int(max(low, high))
+        R = range(low, high)
+        P = [self.pmf(k) for k in R]
+
         plt.figure()
-        plt.plot(x, self.pdf(x))
-        plt.title(r'$\chi^2$ (%.1f): PDF from %.2f to %.2f' %(self.k, low,  high))
+        plt.plot(R, P, zorder=1, color='0.2', lw=1.5)
+        plt.scatter(R, P, zorder=2, s=150, color='orange')
+        plt.vlines(R, 0, P, alpha=0.4, colors='orange')
+
+
+        plt.title(r'Poisson($\lambda$ = %.1f): PMF for k = %.2f to %.2f' \
+                  %(self.lamb, low,  high))
+        plt.axhline(color='k')
+        plt.axvline(color='k')
         plt.show()
 
         return
@@ -219,31 +223,39 @@ class Chi_square:
         -----
         While this has no return values, the plot is generated and shown.
         """
-        x = np.linspace(low, high, 400)
+        low, high = int(min(low, high)), int(max(low, high))
+        R = range(low, high)
+        P = [self.cdf(k) for k in R]
+
         plt.figure()
-        plt.plot(x, self.cdf(x))
-        plt.title(r'$\chi^2$ (%.1f): PDF from %.2f to %.2f' %(self.k, low,  high))
+        plt.plot(R, P, zorder=1, color='0.2', lw=1.5)
+        plt.fill_between(R, 0, P, color='orange', alpha=0.2)
+
+        plt.title(r'Poisson($\lambda$ = %.1f): CDF for k = %.2f to %.2f' \
+                  %(self.lamb, low,  high))
+        plt.axhline(color='k')
+        plt.axvline(color='k')
         plt.show()
 
         return
 
 
 if __name__ == '__main__':
-    x = np.array([1.2, 1.5, 2.1, 5.4])
-    k = 4
-    chi2 = Chi_square(k)
-    print 'support = ', chi2.support
-    print 'mean = ', chi2.mean
-    print 'median= ', chi2.median
-    print 'mode = ', chi2.mode
-    print 'variance = ', chi2.variance
-    print 'skewness = ', chi2.skewness
-    print 'Excess kurtosis = ', chi2.ex_kurtosis
+    x = np.array([1, 3, 6, 7])
+    lamb = 8
+    poisson = Poisson(lamb)
+    print 'support = ', poisson.support
+    print 'mean = ', poisson.mean
+    print 'median= ', poisson.median
+    print 'mode = ', poisson.mode
+    print 'variance = ', poisson.variance
+    print 'skewness = ', poisson.skewness
+    print 'Excess kurtosis = ', poisson.ex_kurtosis
     print 'x = ', x
-    print 'pdf at x = ', chi2.pdf(x)
-    print 'cdf at x = ', chi2.cdf(x)
-    print '6 random_draws ', chi2.rand_draw(6)
-    print 'Plot of pdf from %.2f to %.2f ' % (0, 10)
-    print 'Plot of cdf from %.2f to %.2f ' % (0, 10)
-    chi2.plot_pdf(0, 10)
-    chi2.plot_cdf(0, 10)
+    print 'pdf at x = ', poisson.pmf(x)
+    print 'cdf at x = ', poisson.cdf(x)
+    print '6 random_draws ', poisson.rand_draw(6)
+    print 'Plot of pdf from %.2f to %.2f ' % (0, 20)
+    print 'Plot of cdf from %.2f to %.2f ' % (0, 20)
+    poisson.plot_pmf(0, 20)
+    poisson.plot_cdf(0, 20)

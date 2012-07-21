@@ -6,24 +6,45 @@ Author: Spencer Lyon
 import numpy as np
 from math import exp, pi, sqrt
 from scipy.special import erf, ndtri
+import matplotlib.pyplot as plt
 
 class Normal:
     def __init__(self, mu = 0, sigma = 1.):
         """
-        Initializes an object of distribution type. We instantiate the object
-        as well as some common statistics about it. This will also check to
-        make sure paramaters have acceptable values and raise a ValueError if
+        Initializes an object of Normal distribution type. We instantiate the
+        object as well as some common statistics about it. This will also
+        make sure mu and sigma have acceptable values and raise a ValueError if
         they don't.
+
+        Methods
+        -------
+        pdf(x): pdf evaluated at each entry in x.
+        cdf(x): cdf evaluated at each entry in x.
+        rand_draw(n): n random draws from the distribution
+        sf(x): survival function (1 - CDF) at x
+        ppf(x): percent point function (inverse of cdf)
+        plot_pdf(low, high): plots pdf with x going from low to high.
+        plot_cdf(low, high): plots cdf with x going from low to high.
+
+        Notes
+        -----
+        This class is dependent on matplotlib, scipy, and numpy.
+
+        References
+        ----------
+        [1]: www.http://mathworld.wolfram.com/PoissonProcess.html
+        [2]: www.http://en.wikipedia.org/wiki/Normal_distribution
+        [3]: scipy.stats.distributions
         """
-        if mu < 0:
-            raise ValueError('mean must be non-negative')
-        if sigma == 0:
-            raise ValueError(" Standard Deviation cannot be equal to 0")
+        if sigma <= 0:
+            raise ValueError(" Standard Deviation must be positive")
         else:
             self.support = '(-inf, inf)'
+            self.mu = mu
+            self.sigma = sigma
             self.mean = mu
             self.stdev = sigma
-            self.varainge = sigma ** 2
+            self.variance = sigma ** 2
             self.skewness = 0.0
             self.ex_kurtosis = 0.0
             self.median = mu
@@ -148,3 +169,91 @@ class Normal:
         ppf = ndtri(x)
 
         return ppf
+
+
+    def plot_pdf(self, low, high):
+        """
+        Plots the pdf of the distribution from low to high.
+
+        Parameters
+        ----------
+        low: number, float
+            The lower bound you want to see on the x-axis in the plot.
+
+        high: number, float
+            The upper bound you want to see on the x-axis in the plot.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        While this has no return values, the plot is generated and shown.
+        """
+        x = np.linspace(low, high, 300)
+        plt.figure()
+        plt.plot(x, self.pdf(x))
+        plt.title('N(%.1f, %.1f): PDF from %.2f to %.2f' %(self.mu,
+                                                              self.sigma,
+                                                              low,  high))
+        plt.axhline(color='k')
+        plt.axvline(color='k')
+        plt.show()
+
+        return
+
+
+    def plot_cdf(self, low, high):
+        """
+        Plots the cdf of the distribution from low to high.
+
+        Parameters
+        ----------
+        low: number, float
+            The lower bound you want to see on the x-axis in the plot.
+
+        high: number, float
+            The upper bound you want to see on the x-axis in the plot.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        While this has no return values, the plot is generated and shown.
+        """
+        x = np.linspace(low, high, 400)
+        plt.figure()
+        plt.plot(x, self.cdf(x))
+        plt.title('N(%.1f, %.1f): PDF from %.2f to %.2f' %(self.mu,
+                                                              self.sigma,
+                                                              low,  high))
+        plt.axhline(color='k')
+        plt.axvline(color='k')
+        plt.show()
+
+        return
+
+
+if __name__ == '__main__':
+    x = np.array([.1, .3, .4, .7])
+    mu = 0.
+    sigma = 1.
+    norm = Normal(mu, sigma)
+    print 'support = ', norm.support
+    print 'mean = ', norm.mean
+    print 'median= ', norm.median
+    print 'mode = ', norm.mode
+    print 'variance = ', norm.variance
+    print 'skewness = ', norm.skewness
+    print 'Excess kurtosis = ', norm.ex_kurtosis
+    print 'x = ', x
+    print 'pdf at x = ', norm.pdf(x)
+    print 'cdf at x = ', norm.cdf(x)
+    print '6 random_draws ', norm.rand_draw(6)
+    print 'Plot of pdf from %.2f to %.2f ' % (-3, 3)
+    print 'Plot of cdf from %.2f to %.2f ' % (-3, 3)
+    norm.plot_pdf(-3, 3)
+    norm.plot_cdf(-3, 3)

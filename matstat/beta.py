@@ -7,19 +7,40 @@ import numpy as np
 from math import sqrt
 from scipy.special import beta as Fbeta
 from scipy.special import btdtr, btdtri
+import matplotlib.pyplot as plt
 
 class Beta:
     def __init__(self, alpha=.1, beta=.1):
         """
-        Initializes an object of distribution type. We instantiate the object
-        as well as some common statistics about it. This will also check to
-        make sure paramaters have acceptable values and raise a ValueError if
-        they don't.
+        Initializes an object of beta distribution type. We instantiate the
+        object as well as some common statistics about it. This will make sure
+        alpha and beta have acceptable values and raise a ValueError if either
+        doesn't.
+
+        Methods
+        -------
+        pdf(x): pdf evaluated at each entry in x.
+        cdf(x): cdf evaluated at each entry in x.
+        rand_draw(n): n random draws from the distribution
+        sf(x): survival function (1 - CDF) at x
+        ppf(x): percent point function (inverse of cdf)
+        plot_pdf(low, high): plots pdf with x going from low to high.
+        plot_cdf(low, high): plots cdf with x going from low to high.
+
+        Notes
+        -----
+        This class is dependent on matplotlib, scipy, math, and numpy.
+
+        References
+        ----------
+        [1]: www.http://mathworld.wolfram.com/BetaDistribution.html
+        [2]: www.http://en.wikipedia.org/wiki/Beta_distribution
+        [3]: scipy.stats.distributions
         """
         if alpha < 0 or beta < 0:
             raise ValueError('mean must be non-negative')
         else:
-            self.support = '(0, 1)'
+            self.support = (0, 1)
             self.alpha = alpha
             self.beta = beta
             self.mean = alpha / (alpha + beta)
@@ -153,3 +174,87 @@ class Beta:
         ppf = btdtri(self.alpha, self.beta, x)
 
         return ppf
+
+
+    def plot_pdf(self, low, high):
+        """
+        Plots the pdf of the distribution from low to high.
+
+        Parameters
+        ----------
+        low: number, float
+            The lower bound you want to see on the x-axis in the plot.
+
+        high: number, float
+            The upper bound you want to see on the x-axis in the plot.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        While this has no return values, the plot is generated and shown.
+        """
+        x = np.linspace(low, high, 300)
+        plt.figure()
+        plt.plot(x, self.pdf(x))
+        plt.title(r'$\beta$ (%.1f, %.1f): PDF from %.2f to %.2f' %(self.alpha,
+                                                                self.beta,
+                                                                low,  high))
+        plt.show()
+
+        return
+
+
+    def plot_cdf(self, low, high):
+        """
+        Plots the cdf of the distribution from low to high.
+
+        Parameters
+        ----------
+        low: number, float
+            The lower bound you want to see on the x-axis in the plot.
+
+        high: number, float
+            The upper bound you want to see on the x-axis in the plot.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        While this has no return values, the plot is generated and shown.
+        """
+        x = np.linspace(low, high, 400)
+        plt.figure()
+        plt.plot(x, self.cdf(x))
+        plt.title(r'$\beta $ (%.1f, %.1f): PDF from %.2f to %.2f' %(self.alpha,
+                                                                self.beta,
+                                                                low,  high))
+        plt.show()
+
+        return
+
+
+if __name__ == '__main__':
+    x = np.array([.1, .3, .4, .7])
+    alpha = .4
+    beta = .5
+    bet = Beta(alpha, beta)
+    print 'support = ', bet.support
+    print 'mean = ', bet.mean
+    print 'median= ', bet.median
+    print 'mode = ', bet.mode
+    print 'variance = ', bet.variance
+    print 'skewness = ', bet.skewness
+    print 'Excess kurtosis = ', bet.ex_kurtosis
+    print 'x = ', x
+    print 'pdf at x = ', bet.pdf(x)
+    print 'cdf at x = ', bet.cdf(x)
+    print '6 random_draws ', bet.rand_draw(6)
+    print 'Plot of pdf from %.2f to %.2f ' % (0, 1)
+    print 'Plot of cdf from %.2f to %.2f ' % (0, 1)
+    bet.plot_pdf(0, 1)
+    bet.plot_cdf(0, 1)

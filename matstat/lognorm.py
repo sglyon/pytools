@@ -2,22 +2,45 @@
 Created July 17, 2012
 
 Author: Spencer Lyon
+
 """
 import numpy as np
 from math import exp, sqrt, pi
 from scipy.special import erf
 from normal import Normal
+import matplotlib.pyplot as plt
 
 class Lognorm:
     def __init__(self, mu = 0, sigma = 1.):
         """
-        Initializes an object of distribution type. We instantiate the object
-        as well as some common statistics about it. This will also check to
-        make sure paramaters have acceptable values and raise a ValueError if
+        Initializes an object of Lognormal distribution type. We instantiate
+        the object as well as some common statistics about it. This will also
+        make sure mu and sigma have acceptable values and raise a ValueError if
         they don't.
+
+        Methods
+        -------
+        pdf(x): pdf evaluated at each entry in x.
+        cdf(x): cdf evaluated at each entry in x.
+        rand_draw(n): n random draws from the distribution
+        sf(x): survival function (1 - CDF) at x
+        ppf(x): percent point function (inverse of cdf)
+        plot_pdf(low, high): plots pdf with x going from low to high.
+        plot_cdf(low, high): plots cdf with x going from low to high.
+
+        Notes
+        -----
+        This class is dependent on matplotlib, scipy, numpy, and Normal
+        (part of matstat).
+
+        References
+        ----------
+        [1]: www.http://mathworld.wolfram.com/LogNormalDistribution.html
+        [2]: www.http://en.wikipedia.org/wiki/Log-normal_distribution
+        [3]: scipy.stats.distributions
         """
-        if mu < 0:
-            raise ValueError('mean must be non-negative')
+        if mu < 0 or sigma <0:
+            raise ValueError('mean and standard deviation must be non-negative')
         else:
             self.support = '(0, inf)'
             self.mu = mu
@@ -152,3 +175,87 @@ class Lognorm:
         ppf = np.exp(self.sigma * norm.ppf(x))
 
         return ppf
+
+
+    def plot_pdf(self, low, high):
+        """
+        Plots the pdf of the distribution from low to high.
+
+        Parameters
+        ----------
+        low: number, float
+            The lower bound you want to see on the x-axis in the plot.
+
+        high: number, float
+            The upper bound you want to see on the x-axis in the plot.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        While this has no return values, the plot is generated and shown.
+        """
+        x = np.linspace(low, high, 300)
+        plt.figure()
+        plt.plot(x, self.pdf(x))
+        plt.title('ln N(%.1f, %.1f): PDF from %.2f to %.2f' %(self.mu,
+                                                              self.sigma,
+                                                              low,  high))
+        plt.show()
+
+        return
+
+
+    def plot_cdf(self, low, high):
+        """
+        Plots the cdf of the distribution from low to high.
+
+        Parameters
+        ----------
+        low: number, float
+            The lower bound you want to see on the x-axis in the plot.
+
+        high: number, float
+            The upper bound you want to see on the x-axis in the plot.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        While this has no return values, the plot is generated and shown.
+        """
+        x = np.linspace(low, high, 400)
+        plt.figure()
+        plt.plot(x, self.cdf(x))
+        plt.title('ln N(%.1f, %.1f): PDF from %.2f to %.2f' %(self.mu,
+                                                              self.sigma,
+                                                              low,  high))
+        plt.show()
+
+        return
+
+
+if __name__ == '__main__':
+    x = np.array([.1, .3, .4, .7])
+    mu = 0.
+    sigma = 1.
+    lognorm = Lognorm(mu, sigma)
+    print 'support = ', lognorm.support
+    print 'mean = ', lognorm.mean
+    print 'median= ', lognorm.median
+    print 'mode = ', lognorm.mode
+    print 'variance = ', lognorm.variance
+    print 'skewness = ', lognorm.skewness
+    print 'Excess kurtosis = ', lognorm.ex_kurtosis
+    print 'x = ', x
+    print 'pdf at x = ', lognorm.pdf(x)
+    print 'cdf at x = ', lognorm.cdf(x)
+    print '6 random_draws ', lognorm.rand_draw(6)
+    print 'Plot of pdf from %.2f to %.2f ' % (0, 3)
+    print 'Plot of cdf from %.2f to %.2f ' % (0, 3)
+    lognorm.plot_pdf(0, 3)
+    lognorm.plot_cdf(0, 3)

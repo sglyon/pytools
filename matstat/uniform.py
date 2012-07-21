@@ -1,20 +1,17 @@
 """
-Created July 19, 2012
+Created July 20, 2012
 
 Author: Spencer Lyon
 """
 from __future__ import division
-import numpy as np
-from math import sqrt
-from scipy.special import gamma, chdtr, chdtri
+import numpy
 import matplotlib.pyplot as plt
 
-class Chi_square:
-    def __init__(self, k=2):
+class Uniform:
+    def __init__(self, a=0, b=1):
         """
-        Initializes an object of chi-squared distribution type. We instantiate
-        the object as well as some common statistics about it. This will make
-        sure k has acceptable values and raise a ValueError if it doesn't.
+        Initializes an object of uniform distribution type. We instantiate the
+        object as well as some common statistics about it.
 
         Methods
         -------
@@ -28,31 +25,32 @@ class Chi_square:
 
         Notes
         -----
-        This class is dependent on matplotlib, scipy, math, and numpy.
+        This class is dependent on matplotlib, and numpy.
 
         References
         ----------
-        [1]: www.http://mathworld.wolfram.com/Chi-SquaredDistribution.html
-        [2]: www.http://en.wikipedia.org/wiki/Chi-squared_distribution
+        [1]: www.http://mathworld.wolfram.com/UniformDistribution.html
+        [2]: www.http://en.wikipedia.org/wiki/Uniform_distribution_(continuous)
         [3]: scipy.stats.distributions
         """
-        if k < 0 or type(k) != int:
-            raise ValueError('k must be a positive iteger')
-        self.k = k
-        self.support = '[0, inf)'
-        self.mean = k
-        self.median = k * (1 - 2 / (9 * k)) ** 3
-        self.mode = max(k - 2, 0)
-        self.variance = 2 * k
-        self.skewness = sqrt(8. / k)
-        self.ex_kurtosis = 12. / k
+        self.a = a
+        self.b = b
+        self.support = (a, b)
+        self.mean = 1 / 2 * ( a + b)
+        self.median = 1 / 2 * ( a + b)
+        self.mode = 'Any value in (%d, %d)' %(a, b)
+        self.variance = 1. / 12 * (b - a) ** 2
+        self.skewness =  0
+        self.ex_kurtosis = - 6. / 5
 
 
     def pdf(self, x):
         """
         Computes the probability density function of the distribution
         at the point x. The pdf is defined as follows:
-            f(x|k) =(1 / (2**(k/2) * gamma(k/2))) * x**(k / 2 - 1) * exp(-x/2)
+                         /   1 - (b - a), if x el [a,b]
+            f(x|a ,b) = |
+                         \   0          , else
 
         Parameters
         ----------
@@ -66,12 +64,20 @@ class Chi_square:
             pdf: array, dtype=float, shape=(m x n)
                 The pdf at each point in x.
         """
-        if (x<0).any():
-            raise ValueError('at least one value of x is not in the support of \
-                             the dist. X must be non-negative.')
-        k = self.k
-        pdf = (1. / (2 ** (k / 2) * gamma(k / 2.))) * \
-                    x ** (k / 2. - 1.) * np.exp(- x / 2.)
+        low = min(self.a, self.b)
+        high = max(self.a, self.b)
+        if type(x) != numpy.ndarray and type(x) != list:
+            x = numpy.array([x])
+
+        pdf = []
+        for val in x:
+            if val >= low and val <= high:
+                pdf_entry = 1 /(high - low)
+            else:
+                pdf_entry = 0.0
+            pdf.append(pdf_entry)
+
+        pdf = numpy.asarray(pdf)
         return pdf
 
 
@@ -79,10 +85,11 @@ class Chi_square:
         """
         Computes the cumulative distribution function of the
         distribution at the point(s) x. The cdf is defined as follows:
-            F(x|k) = gammainc(k/2, x/2) / gamma(k/2)
-
-        Where gammainc and gamma are the incomplete gamma and gamma functions,
-        respectively.
+                         /   0, if x < a
+            F(x|a ,b) = |
+                        |  (x - a) / (b - a), if x el [a,b)
+                        |
+                         \   1          , if x >= b
 
         Parameters
         ----------
@@ -96,8 +103,22 @@ class Chi_square:
         cdf: array, dtype=float, shape=(m x n)
             The cdf at each point in x.
         """
-        cdf = chdtr(self.k, x)
+        low = min(self.a, self.b)
+        high = max(self.a, self.b)
+        if type(x) != numpy.ndarray and type(x) != list:
+            x = numpy.array([x])
 
+        cdf = []
+        for val in x:
+            if val < low:
+                cdf_entry = 0.
+            elif val >= low and val < high:
+                cdf_entry = (val - low) / (high - low)
+            else:
+                cdf_entry = 1.
+            cdf.append(cdf_entry)
+
+        cdf = numpy.asarray(cdf)
         return cdf
 
 
@@ -115,7 +136,10 @@ class Chi_square:
         draw: array, dtype=float, shape=(n x 1)
             The n x 1 random draws from the distribution.
         """
-        draw = np.random.chisquare(self.k, n)
+        n = int(n)
+        low = min(self.a, self.b)
+        high = max(self.a, self.b)
+        draw = numpy.random.uniform(low, high, n)
 
         return draw
 
@@ -163,9 +187,9 @@ class Chi_square:
         ppf: array, dtype=float, shape=(m x n)
             The ppf at each point in x.
         """
-        if x >=0 or x <=1:
-            raise ValueError('x must be between 0 and 1, exclusive')
-        ppf = chdtri(self.k, 1. - x)
+        low = min(self.a, self.b)
+        high = max(self.a, self.b)
+        ppf = (high - low) * x + low
 
         return ppf
 
@@ -190,10 +214,11 @@ class Chi_square:
         -----
         While this has no return values, the plot is generated and shown.
         """
-        x = np.linspace(low, high, 300)
+        x = numpy.linspace(low, high, 300)
         plt.figure()
         plt.plot(x, self.pdf(x))
-        plt.title(r'$\chi^2$ (%.1f): PDF from %.2f to %.2f' %(self.k, low,  high))
+        plt.title('U(%.1f, %.1f): PDF from %.2f to %.2f' %(self.a, self.b,
+                                                           low,  high))
         plt.show()
 
         return
@@ -219,31 +244,33 @@ class Chi_square:
         -----
         While this has no return values, the plot is generated and shown.
         """
-        x = np.linspace(low, high, 400)
+        x = numpy.linspace(low, high, 400)
         plt.figure()
         plt.plot(x, self.cdf(x))
-        plt.title(r'$\chi^2$ (%.1f): PDF from %.2f to %.2f' %(self.k, low,  high))
+        plt.title('U(%.1f, %.1f): CDF from %.2f to %.2f' %(self.a, self.b,
+                                                           low, high))
         plt.show()
 
         return
 
 
 if __name__ == '__main__':
-    x = np.array([1.2, 1.5, 2.1, 5.4])
-    k = 4
-    chi2 = Chi_square(k)
-    print 'support = ', chi2.support
-    print 'mean = ', chi2.mean
-    print 'median= ', chi2.median
-    print 'mode = ', chi2.mode
-    print 'variance = ', chi2.variance
-    print 'skewness = ', chi2.skewness
-    print 'Excess kurtosis = ', chi2.ex_kurtosis
+    x = numpy.array([1.2, 1.5, 2.1, 5.4])
+    low = .4
+    high = 6
+    uni = Uniform(low, high)
+    print 'support = ', uni.support
+    print 'mean = ', uni.mean
+    print 'median= ', uni.median
+    print 'mode = ', uni.mode
+    print 'variance = ', uni.variance
+    print 'skewness = ', uni.skewness
+    print 'Excess kurtosis = ', uni.ex_kurtosis
     print 'x = ', x
-    print 'pdf at x = ', chi2.pdf(x)
-    print 'cdf at x = ', chi2.cdf(x)
-    print '6 random_draws ', chi2.rand_draw(6)
-    print 'Plot of pdf from %.2f to %.2f ' % (0, 10)
-    print 'Plot of cdf from %.2f to %.2f ' % (0, 10)
-    chi2.plot_pdf(0, 10)
-    chi2.plot_cdf(0, 10)
+    print 'pdf at x = ', uni.pdf(x)
+    print 'cdf at x = ', uni.cdf(x)
+    print '6 random_draws ', uni.rand_draw(6)
+    print 'Plot of pdf from %.2f to %.2f ' % (low - 1, high + 1)
+    print 'Plot of cdf from %.2f to %.2f ' % (low - 1, high + 1)
+    uni.plot_pdf(low - 1, high + 1)
+    uni.plot_cdf(low - 1, high + 1)

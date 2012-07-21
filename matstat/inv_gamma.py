@@ -1,20 +1,23 @@
 """
-Created July 19, 2012
+Created July 20, 2012
 
 Author: Spencer Lyon
 """
 from __future__ import division
-import numpy as np
 from math import sqrt
-from scipy.special import gamma, chdtr, chdtri
+import numpy as np
+from scipy.special import gamma as Fgamma
+from scipy.special import gammainc as Fgammainc
+from scipy.special import gammaincinv
 import matplotlib.pyplot as plt
 
-class Chi_square:
-    def __init__(self, k=2):
+class Inverse_gamma:
+    def __init__(self, alpha=1., beta=1.):
         """
-        Initializes an object of chi-squared distribution type. We instantiate
+        Initializes an object of inverse-gamma distribution type. We instantiate
         the object as well as some common statistics about it. This will make
-        sure k has acceptable values and raise a ValueError if it doesn't.
+        sure alpha and beta have acceptable values and raise a ValueError if
+        either doesn't.
 
         Methods
         -------
@@ -32,27 +35,32 @@ class Chi_square:
 
         References
         ----------
-        [1]: www.http://mathworld.wolfram.com/Chi-SquaredDistribution.html
-        [2]: www.http://en.wikipedia.org/wiki/Chi-squared_distribution
-        [3]: scipy.stats.distributions
+        [1]: www.http://en.wikipedia.org/wiki/Inverse-gamma_distribution
+        [2]: scipy.stats.distributions
         """
-        if k < 0 or type(k) != int:
-            raise ValueError('k must be a positive iteger')
-        self.k = k
-        self.support = '[0, inf)'
-        self.mean = k
-        self.median = k * (1 - 2 / (9 * k)) ** 3
-        self.mode = max(k - 2, 0)
-        self.variance = 2 * k
-        self.skewness = sqrt(8. / k)
-        self.ex_kurtosis = 12. / k
+        if alpha < 0 or beta < 0:
+            raise ValueError('Both alpha and beta need to be positive')
+        self.alpha = alpha
+        self.beta = beta
+        self.support = '(0, inf)'
+        self.mean = beta / (alpha - 1) if alpha > 1 else None
+        self.median = None
+        self.mode = beta / (alpha + 1)
+        self.variance = beta ** 2 / ((alpha - 1) ** 2 * (alpha - 2)) \
+                        if alpha > 2 else None
+        self.skewness = 4 * sqrt(alpha - 2) / (alpha - 2) if alpha > 3 else None
+        self.ex_kurtosis = (30 * alpha - 66) / ((alpha - 3) * (alpha - 4)) \
+                        if alpha > 4 else None
 
 
     def pdf(self, x):
         """
         Computes the probability density function of the distribution
         at the point x. The pdf is defined as follows:
-            f(x|k) =(1 / (2**(k/2) * gamma(k/2))) * x**(k / 2 - 1) * exp(-x/2)
+            f(x|alpha, beta) = beta ** alpha * x ** (- alpha - 1) * \
+                               np.exp(- beta / x) / Fgamma(alpha)
+
+            where Fgamma is the gamma function
 
         Parameters
         ----------
@@ -66,12 +74,10 @@ class Chi_square:
             pdf: array, dtype=float, shape=(m x n)
                 The pdf at each point in x.
         """
-        if (x<0).any():
-            raise ValueError('at least one value of x is not in the support of \
-                             the dist. X must be non-negative.')
-        k = self.k
-        pdf = (1. / (2 ** (k / 2) * gamma(k / 2.))) * \
-                    x ** (k / 2. - 1.) * np.exp(- x / 2.)
+        beta = self.beta
+        alpha = self.alpha
+        pdf = beta ** alpha * x ** (- alpha - 1) * np.exp(- beta / x) / \
+                Fgamma(alpha)
         return pdf
 
 
@@ -79,10 +85,10 @@ class Chi_square:
         """
         Computes the cumulative distribution function of the
         distribution at the point(s) x. The cdf is defined as follows:
-            F(x|k) = gammainc(k/2, x/2) / gamma(k/2)
+            F(x|alpha, beta) = Fgammainc(alpha, beta / x) / Fgamma(alpha)
 
-        Where gammainc and gamma are the incomplete gamma and gamma functions,
-        respectively.
+        where Fgammainc and Fgamma are the upper incomplete gamma and gamma
+        functions, respectively.
 
         Parameters
         ----------
@@ -96,7 +102,7 @@ class Chi_square:
         cdf: array, dtype=float, shape=(m x n)
             The cdf at each point in x.
         """
-        cdf = chdtr(self.k, x)
+        cdf = 1 - Fgammainc(self.alpha, self.beta / x)
 
         return cdf
 
@@ -115,7 +121,8 @@ class Chi_square:
         draw: array, dtype=float, shape=(n x 1)
             The n x 1 random draws from the distribution.
         """
-        draw = np.random.chisquare(self.k, n)
+        U = np.random.sample(n)
+        draw = self.ppf(U)
 
         return draw
 
@@ -163,9 +170,8 @@ class Chi_square:
         ppf: array, dtype=float, shape=(m x n)
             The ppf at each point in x.
         """
-        if x >=0 or x <=1:
-            raise ValueError('x must be between 0 and 1, exclusive')
-        ppf = chdtri(self.k, 1. - x)
+
+        ppf = 1. / gammaincinv(self.alpha, 1 - x)
 
         return ppf
 
@@ -193,7 +199,9 @@ class Chi_square:
         x = np.linspace(low, high, 300)
         plt.figure()
         plt.plot(x, self.pdf(x))
-        plt.title(r'$\chi^2$ (%.1f): PDF from %.2f to %.2f' %(self.k, low,  high))
+        plt.title(r'$\Gamma^-1(%.1f, %.1f)$: CDF from  %.2f to %.2f' %(self.alpha,
+                                                                  self.beta,
+                                                                  low,  high))
         plt.show()
 
         return
@@ -222,28 +230,31 @@ class Chi_square:
         x = np.linspace(low, high, 400)
         plt.figure()
         plt.plot(x, self.cdf(x))
-        plt.title(r'$\chi^2$ (%.1f): PDF from %.2f to %.2f' %(self.k, low,  high))
+        plt.title(r'$\Gamma^-1(%.1f, %.1f)$: CDF from  %.2f to %.2f' %(self.alpha,
+                                                                  self.beta,
+                                                                  low,  high))
         plt.show()
 
         return
 
 
 if __name__ == '__main__':
-    x = np.array([1.2, 1.5, 2.1, 5.4])
-    k = 4
-    chi2 = Chi_square(k)
-    print 'support = ', chi2.support
-    print 'mean = ', chi2.mean
-    print 'median= ', chi2.median
-    print 'mode = ', chi2.mode
-    print 'variance = ', chi2.variance
-    print 'skewness = ', chi2.skewness
-    print 'Excess kurtosis = ', chi2.ex_kurtosis
+    x = np.array([.1, .3, .4, .7])
+    alpha = 3.
+    beta = 1.
+    gam = Inverse_gamma(alpha, beta)
+    print 'support = ', gam.support
+    print 'mean = ', gam.mean
+    print 'median= ', gam.median
+    print 'mode = ', gam.mode
+    print 'variance = ', gam.variance
+    print 'skewness = ', gam.skewness
+    print 'Excess kurtosis = ', gam.ex_kurtosis
     print 'x = ', x
-    print 'pdf at x = ', chi2.pdf(x)
-    print 'cdf at x = ', chi2.cdf(x)
-    print '6 random_draws ', chi2.rand_draw(6)
-    print 'Plot of pdf from %.2f to %.2f ' % (0, 10)
-    print 'Plot of cdf from %.2f to %.2f ' % (0, 10)
-    chi2.plot_pdf(0, 10)
-    chi2.plot_cdf(0, 10)
+    print 'pdf at x = ', gam.pdf(x)
+    print 'cdf at x = ', gam.cdf(x)
+    print '6 random_draws ', gam.rand_draw(6)
+    print 'Plot of pdf from %.2f to %.2f ' % (0, 3)
+    print 'Plot of cdf from %.2f to %.2f ' % (0, 3)
+    gam.plot_pdf(0, 3)
+    gam.plot_cdf(0, 3)

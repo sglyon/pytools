@@ -14,6 +14,9 @@ from chi_square import Chi_square
 from exponential import Exponential
 from f_dist import F_dist
 from gamma import Gamma
+from inv_gamma import Inverse_gamma
+from student_t import Student_t
+from uniform import Uniform
 from numpy import array
 
 x = array([1.2, 1.5, 2.1, 5.4])
@@ -30,6 +33,9 @@ chi2 = Chi_square(k)
 exp = Exponential(gamma)
 f = F_dist(d1, d2)
 gamma = Gamma(kk, theta)
+invgamma = Inverse_gamma(mu, sigma)
+t = Student_t(d2)
+uniform = Uniform(alpha, d2)
 
 print 'lnorm.cdf(x): ', lnorm.cdf(x)
 print 'norm.cdf(x): ', norm.cdf(x)
@@ -39,6 +45,9 @@ print 'chi2.cdf(x): ', chi2.cdf(x)
 print 'exp.cdf(x): ', exp.cdf(x)
 print 'f.cdf(x): ', f.cdf(x)
 print 'gamma.cdf(x): ', gamma.cdf(x)
+print 'invgamma.cdf(x): ', invgamma.cdf(x)
+print 't.cdf(x): ', t.cdf(x)
+print 'uniform.cdf(x): ', uniform.cdf(x)
 
 print 'lnorm.pdf(x): ', lnorm.pdf(x)
 print 'norm.pdf(x): ', norm.pdf(x)
@@ -48,4 +57,6 @@ print 'chi2.pdf(x): ', chi2.pdf(x)
 print 'exp.pdf(x): ', exp.pdf(x)
 print 'f.pdf(x): ', f.pdf(x)
 print 'gamma.pdf(x): ', gamma.pdf(x)
-
+print 'invgamma.pdf(x): ', invgamma.pdf(x)
+print 't.pdf(x): ', t.pdf(x)
+print 'uniform.pdf(x): ', uniform.pdf(x)
