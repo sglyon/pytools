@@ -148,7 +148,9 @@ for ticker in range(len(tickers)):
                                                             'Div/share',
                                                             'Div Inc',
                                                             'Gain/Loss Exercise',
-                                                            'Total Income'])
+                                                            'Total Income',
+                                                            'Return',
+                                                            'Annual Return'])
 
             temp_frame2.columns = ['Strike',
                                    'Ticker',
@@ -160,7 +162,9 @@ for ticker in range(len(tickers)):
                                    'Div/share',
                                    'Div Inc',
                                    'Gain/Loss Exercise',
-                                   'Total Income']
+                                   'Total Income',
+                                   'Return',
+                                   'Annual Return']
 
             temp_frame2['Ticker'] = tickers[ticker]
             temp_frame2['Exp. Date'] = str(str(op_months[month]) +
@@ -242,6 +246,13 @@ for ticker in range(len(tickers)):
             temp_frame2['Total Income'] = temp_frame2['Gain/Loss Exercise'] + \
                                           temp_frame2['Div Inc'] +  \
                                           temp_frame2['Price']
+
+            temp_frame2['Return'] = temp_frame2['Total Income'] / \
+                                    temp_frame2['Stock Price']
+
+            time_to_expiration = abs_op_months[month] - current_month
+            temp_frame2['Annual Return'] = temp_frame2['Return'] * \
+                                           (12. /  time_to_expiration)
 
             temp_frame2 = temp_frame2.dropna()
 
