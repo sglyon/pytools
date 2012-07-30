@@ -144,7 +144,7 @@ class Beta:
             The sf at each point in x.
         """
         vals = self.cdf(x)
-        x = 1 - vals
+        sf = 1 - vals
 
         return sf
 
@@ -169,8 +169,9 @@ class Beta:
         ppf: array, dtype=float, shape=(m x n)
             The ppf at each point in x.
         """
-        if x >=0 or x <=1:
-            raise ValueError('x must be between 0 and 1, exclusive')
+        if (x <=0).any() or (x >=1).any():
+            raise ValueError('all values in x must be between 0 and 1, \
+                             exclusive')
         ppf = btdtri(self.alpha, self.beta, x)
 
         return ppf
@@ -253,6 +254,8 @@ if __name__ == '__main__':
     print 'x = ', x
     print 'pdf at x = ', bet.pdf(x)
     print 'cdf at x = ', bet.cdf(x)
+    print 'ppf at x = ', bet.ppf(x)
+    print 'sf at x = ', bet.sf(x)
     print '6 random_draws ', bet.rand_draw(6)
     print 'Plot of pdf from %.2f to %.2f ' % (0, 1)
     print 'Plot of cdf from %.2f to %.2f ' % (0, 1)

@@ -144,7 +144,7 @@ class Lognorm:
             The sf at each point in x.
         """
         vals = self.cdf(x)
-        x = 1 - vals
+        sf = 1 - vals
 
         return sf
 
@@ -169,9 +169,10 @@ class Lognorm:
         ppf: array, dtype=float, shape=(m x n)
             The ppf at each point in x.
         """
-        if x >=0 or x <=1:
-            raise ValueError('x must be between 0 and 1, exclusive')
-        norm = normal(self.mu, self.sigma)
+        if (x <= 0).any() or (x >= 1).any():
+            raise ValueError('all values in x must be between 0 and 1, \
+                             exclusive')
+        norm = Normal(self.mu, self.sigma)
         ppf = np.exp(self.sigma * norm.ppf(x))
 
         return ppf
@@ -254,6 +255,8 @@ if __name__ == '__main__':
     print 'x = ', x
     print 'pdf at x = ', lognorm.pdf(x)
     print 'cdf at x = ', lognorm.cdf(x)
+    print 'ppf at x = ', lognorm.ppf(x)
+    print 'sf at x = ', lognorm.sf(x)
     print '6 random_draws ', lognorm.rand_draw(6)
     print 'Plot of pdf from %.2f to %.2f ' % (0, 3)
     print 'Plot of cdf from %.2f to %.2f ' % (0, 3)

@@ -138,7 +138,7 @@ class Chi_square:
             The sf at each point in x.
         """
         vals = self.cdf(x)
-        x = 1 - vals
+        sf = 1 - vals
 
         return sf
 
@@ -163,8 +163,9 @@ class Chi_square:
         ppf: array, dtype=float, shape=(m x n)
             The ppf at each point in x.
         """
-        if x >=0 or x <=1:
-            raise ValueError('x must be between 0 and 1, exclusive')
+        if (x <=0).any() or (x >=1).any():
+            raise ValueError('all values in x must be between 0 and 1, \
+                             exclusive')
         ppf = chdtri(self.k, 1. - x)
 
         return ppf
@@ -230,6 +231,7 @@ class Chi_square:
 
 if __name__ == '__main__':
     x = np.array([1.2, 1.5, 2.1, 5.4])
+    x2 = np.array([.1, .3, .5, .9])
     k = 4
     chi2 = Chi_square(k)
     print 'support = ', chi2.support
@@ -242,6 +244,8 @@ if __name__ == '__main__':
     print 'x = ', x
     print 'pdf at x = ', chi2.pdf(x)
     print 'cdf at x = ', chi2.cdf(x)
+    print 'ppf at x = ', chi2.ppf(x2)
+    print 'sf at x = ', chi2.sf(x)
     print '6 random_draws ', chi2.rand_draw(6)
     print 'Plot of pdf from %.2f to %.2f ' % (0, 10)
     print 'Plot of cdf from %.2f to %.2f ' % (0, 10)

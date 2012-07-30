@@ -129,7 +129,7 @@ class Exponential:
             The sf at each point in x.
         """
         vals = self.cdf(x)
-        x = 1 - vals
+        sf = 1 - vals
 
         return sf
 
@@ -154,8 +154,9 @@ class Exponential:
         ppf: array, dtype=float, shape=(m x n)
             The ppf at each point in x.
         """
-        if x >=0 or x <=1:
-            raise ValueError('x must be between 0 and 1, exclusive')
+        if (x <=0).any() or (x >=1).any():
+            raise ValueError('all values in x must be between 0 and 1, \
+                             exclusive')
         ppf = np.log1p(x)
 
         return ppf
@@ -221,6 +222,7 @@ class Exponential:
 
 if __name__ == '__main__':
     x = np.array([1.2, 1.5, 2.1, 5.4])
+    x2 = np.array([.1, .3, .5, .9])
     lamb = 1.5
     ex = Exponential(lamb)
     print 'support = ', ex.support
@@ -233,6 +235,8 @@ if __name__ == '__main__':
     print 'x = ', x
     print 'pdf at x = ', ex.pdf(x)
     print 'cdf at x = ', ex.cdf(x)
+    print 'ppf at x = ', ex.ppf(x2)
+    print 'sf at x = ', ex.sf(x)
     print '6 random_draws ', ex.rand_draw(6)
     print 'Plot of pdf from %.2f to %.2f ' % (0, 6)
     print 'Plot of cdf from %.2f to %.2f ' % (0, 6)

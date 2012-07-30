@@ -7,6 +7,7 @@ from __future__ import division
 from math import sqrt, pi
 import numpy as np
 from scipy.special import beta, gamma, stdtr, stdtrit
+import matplotlib.pyplot as plt
 
 class Student_t:
     def __init__(self, nu=3):
@@ -44,7 +45,8 @@ class Student_t:
         self.mode = 0.
         self.variance = nu / (nu - 2) if nu > 2 else (None if nu<1 else np.inf)
         self.skewness =  0 if nu > 3 else None
-        self.ex_kurtosis = 6 / (nu - 4) if nu > 4 else (None if n<2 else np.inf)
+        self.ex_kurtosis = 6 / (nu - 4) if nu > 4 else (None if nu < 2 else
+                                                        np.inf)
 
 
     def pdf(self, x):
@@ -137,7 +139,7 @@ class Student_t:
             The sf at each point in x.
         """
         vals = self.cdf(x)
-        x = 1 - vals
+        sf = 1 - vals
 
         return sf
 
@@ -162,6 +164,90 @@ class Student_t:
         ppf: array, dtype=float, shape=(m x n)
             The ppf at each point in x.
         """
+        if (x <=0).any() or (x >=1).any():
+            raise ValueError('all values in x must be between 0 and 1, \
+                             exclusive')
         ppf = stdtrit(self.nu, x)
 
         return ppf
+
+
+    def plot_pdf(self, low, high):
+        """
+        Plots the pdf of the distribution from low to high.
+
+        Parameters
+        ----------
+        low: number, float
+            The lower bound you want to see on the x-axis in the plot.
+
+        high: number, float
+            The upper bound you want to see on the x-axis in the plot.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        While this has no return values, the plot is generated and shown.
+        """
+        x = np.linspace(low, high, 300)
+        plt.figure()
+        plt.plot(x, self.pdf(x))
+        plt.title('ln t(%.1f): PDF from %.2f to %.2f' %(self.nu, low,  high))
+        plt.show()
+
+        return
+
+
+    def plot_cdf(self, low, high):
+        """
+        Plots the cdf of the distribution from low to high.
+
+        Parameters
+        ----------
+        low: number, float
+            The lower bound you want to see on the x-axis in the plot.
+
+        high: number, float
+            The upper bound you want to see on the x-axis in the plot.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        While this has no return values, the plot is generated and shown.
+        """
+        x = np.linspace(low, high, 400)
+        plt.figure()
+        plt.plot(x, self.cdf(x))
+        plt.title('ln t(%.1f): PDF from %.2f to %.2f' %(self.nu, low,  high))
+        plt.show()
+
+        return
+
+
+if __name__ == '__main__':
+    x = np.array([.1, .3, .4, .7])
+    nu = 4
+    t = Student_t(nu)
+    print 'support = ', t.support
+    print 'mean = ', t.mean
+    print 'median= ', t.median
+    print 'mode = ', t.mode
+    print 'variance = ', t.variance
+    print 'skewness = ', t.skewness
+    print 'Excess kurtosis = ', t.ex_kurtosis
+    print 'x = ', x
+    print 'pdf at x = ', t.pdf(x)
+    print 'cdf at x = ', t.cdf(x)
+    print 'ppf at x = ', t.ppf(x)
+    print 'sf at x = ', t.sf(x)
+    print '6 random_draws ', t.rand_draw(6)
+    print 'Plot of pdf from %.2f to %.2f ' % (-3, 3)
+    print 'Plot of cdf from %.2f to %.2f ' % (-3, 3)
+    t.plot_pdf(-3, 3)
+    t.plot_cdf(-3, 3)

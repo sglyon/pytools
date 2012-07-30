@@ -162,7 +162,7 @@ class Uniform:
             The sf at each point in x.
         """
         vals = self.cdf(x)
-        x = 1 - vals
+        sf = 1 - vals
 
         return sf
 
@@ -187,6 +187,9 @@ class Uniform:
         ppf: array, dtype=float, shape=(m x n)
             The ppf at each point in x.
         """
+        if (x <=0).any() or (x >=1).any():
+            raise ValueError('all values in x must be between 0 and 1, \
+                             exclusive')
         low = min(self.a, self.b)
         high = max(self.a, self.b)
         ppf = (high - low) * x + low
@@ -256,6 +259,7 @@ class Uniform:
 
 if __name__ == '__main__':
     x = numpy.array([1.2, 1.5, 2.1, 5.4])
+    y = numpy.array([.1, .3, .5, .9])
     low = .4
     high = 6
     uni = Uniform(low, high)
@@ -269,6 +273,8 @@ if __name__ == '__main__':
     print 'x = ', x
     print 'pdf at x = ', uni.pdf(x)
     print 'cdf at x = ', uni.cdf(x)
+    print 'ppf at x = ', uni.ppf(y)
+    print 'sf at x = ', uni.sf(x)
     print '6 random_draws ', uni.rand_draw(6)
     print 'Plot of pdf from %.2f to %.2f ' % (low - 1, high + 1)
     print 'Plot of cdf from %.2f to %.2f ' % (low - 1, high + 1)

@@ -1,21 +1,23 @@
 """
-Created July 20, 2012
+Created July 23, 2012
 
 Author: Spencer Lyon
 """
 from __future__ import division
-from math import floor, exp
 import numpy as np
-from scipy.special import pdtr, pdtrik
-from scipy.misc import factorial
+from math import sqrt
+from scipy.misc import comb
+from scipy.special import bdtrik, bdtr
 import matplotlib.pyplot as plt
 
-class Poisson:
-    def __init__(self, lamb=4):
+
+class Binomial:
+    def __init__(self, p=.4, n=20):
         """
-        Initializes an object of Poisson distribution type. We instantiate the
+        Initializes an object of Binomial distribution type. We instantiate the
         object as well as some common statistics about it. This will also
-        make sure lamb has acceptable values and raise a ValueError if it don't.
+        make sure n and k have acceptable values and raise a ValueError if they
+        don't.
 
         Methods
         -------
@@ -31,31 +33,34 @@ class Poisson:
         -----
         This class is dependent on math, numpy, matplotlib, and scipy.
 
-        References
+        References: XXX
         ----------
         [1]: www.http://mathworld.wolfram.com/PoissonDistribution.html
         [2]: www.http://en.wikipedia.org/wiki/Poisson_distribution
         [3]: scipy.stats.distributions
         """
-        self.lamb = lamb
+        if p > 1 or p <=0:
+            raise ValueError('p must be an element of (0, 1])')
+        self.n = n
+        self.p = p
         self.support = 'k el {0, 2, 3, ...}'
-        self.mean = lamb
-        self.median = floor(lamb + 1 / 3 - 0.02 / lamb)
-        self.mode = floor(lamb)
-        self.variance = lamb
-        self.skewness = lamb ** (-1 / 2)
-        self.ex_kurtosis = 1. / lamb
+        self.mean = n * p
+        self.median = n * p
+        self.mode = (n + 1) * p
+        self.variance = n * p * (1 - p)
+        self.skewness = (1 - 2 * p) / sqrt(n * p * (1 - p))
+        self.ex_kurtosis = (1 - 6 * p * (1 - p)) / (n * p * (1 - p))
 
 
-    def pmf(self, x):
+    def pmf(self, k):
         """
         Computes the probability mass function of the distribution
         at the point x. The pdf is defined as follows:
-            f(x| lamb, k) = lamb ** k / k! * exp( - lamb)
+            f(x| p) = (1 - p) ** (x - 1) * p
 
         Parameters
         ----------
-            x: array, dtype=float, shape=(m x n)
+            k: array, dtype=float, shape=(m x n)
                 The value(s) at which the user would like the pmf evaluated.
                 If an array is passed in, the pmf is evaluated at every point
                 in the array and an array of the same size is returned.
@@ -65,8 +70,7 @@ class Poisson:
             pmf: array, dtype=float, shape=(m x n)
                 The pmf at each point in x.
         """
-
-        pmf = self.lamb ** x / factorial(x) * exp(- self.lamb)
+        pmf = comb(self.n, k) * self.p ** k * (1 - self.p) ** (self.n - k)
         return pmf
 
 
@@ -74,7 +78,7 @@ class Poisson:
         """
         Computes the cumulative distribution function of the
         distribution at the point(s) x. The cdf is defined as follows:
-            F(x|) =
+            F(x|p) = 1 - (1 - p) ** x
 
         Parameters
         ----------
@@ -88,19 +92,19 @@ class Poisson:
         cdf: array, dtype=float, shape=(m x n)
             The cdf at each point in x.
         """
-        floored = np.floor(x)
-        cdf = pdtr(floored, self.lamb)
+        k = np.floor(x)
+        cdf = bdtr(k, self.n, self.p)
 
         return cdf
 
 
-    def rand_draw(self, n):
+    def rand_draw(self, m):
         """
         Return a random draw from the distribution
 
         Parameters
         ----------
-        n: number, int
+        m: number, int
             The number of random draws that you would like.
 
         Returns
@@ -108,7 +112,7 @@ class Poisson:
         draw: array, dtype=float, shape=(n x 1)
             The n x 1 random draws from the distribution.
         """
-        draw = np.random.poisson(self.lamb, n)
+        draw = np.random.binomial(self.n, self.p, m)
 
         return draw
 
@@ -156,17 +160,16 @@ class Poisson:
         ppf: array, dtype=float, shape=(m x n)
             The ppf at each point in x.
         """
-        vals = np.ceil(pdtrik(x, self.lamb))
+        vals = np.ceil(bdtrik(x, self.n, self.p))
         vals1 = vals - 1
-        temp = pdtr(vals1, self.lamb)
+        temp = bdtr(vals1, self.n, self.p)
         ppf = np.where((temp >= x), vals1, vals)
-
         return ppf
 
 
     def plot_pmf(self, low, high):
         """
-        Plots the pdf of the distribution where k goes from low to high.
+        Plots the pmf of the distribution where k goes from low to high.
 
         Parameters
         ----------
@@ -194,8 +197,8 @@ class Poisson:
         plt.vlines(R, 0, P, alpha=0.4, colors='orange')
 
 
-        plt.title(r'Poisson($\lambda$ = %.1f): PMF for k = %.2f to %.2f' \
-                  %(self.lamb, low,  high))
+        plt.title('Geometric(p = %.1f): PMF for k = %.2f to %.2f' %(self.p, low,
+                                                                    high))
         plt.axhline(color='k')
         plt.axvline(color='k')
         plt.show()
@@ -231,8 +234,8 @@ class Poisson:
         plt.plot(R, P, zorder=1, color='0.2', lw=1.5)
         plt.fill_between(R, 0, P, color='orange', alpha=0.2)
 
-        plt.title(r'Poisson($\lambda$ = %.1f): CDF for k = %.2f to %.2f' \
-                  %(self.lamb, low,  high))
+        plt.title('Geometric(p = %.1f): CDF for k = %.2f to %.2f' %(self.p, low,
+                                                                    high))
         plt.axhline(color='k')
         plt.axvline(color='k')
         plt.show()
@@ -243,22 +246,23 @@ class Poisson:
 if __name__ == '__main__':
     x = np.array([1, 3, 6, 7])
     x2 = np.array([.1, .3, .5, .9])
-    lamb = 8
-    poisson = Poisson(lamb)
-    print 'support = ', poisson.support
-    print 'mean = ', poisson.mean
-    print 'median= ', poisson.median
-    print 'mode = ', poisson.mode
-    print 'variance = ', poisson.variance
-    print 'skewness = ', poisson.skewness
-    print 'Excess kurtosis = ', poisson.ex_kurtosis
+    p = .3
+    n = 20
+    bino = Binomial(p, n)
+    print 'support = ', bino.support
+    print 'mean = ', bino.mean
+    print 'median= ', bino.median
+    print 'mode = ', bino.mode
+    print 'variance = ', bino.variance
+    print 'skewness = ', bino.skewness
+    print 'Excess kurtosis = ', bino.ex_kurtosis
     print 'x = ', x
-    print 'pdf at x = ', poisson.pmf(x)
-    print 'cdf at x = ', poisson.cdf(x)
-    print 'ppf at x = ', poisson.ppf(x2)
-    print 'sf at x = ', poisson.sf(x)
-    print '6 random_draws ', poisson.rand_draw(6)
+    print 'pdf at x = ', bino.pmf(x)
+    print 'cdf at x = ', bino.cdf(x)
+    print 'ppf at x = ', bino.ppf(x2)
+    print 'sf at x = ', bino.sf(x)
+    print '6 random_draws ', bino.rand_draw(6)
     print 'Plot of pdf from %.2f to %.2f ' % (0, 20)
     print 'Plot of cdf from %.2f to %.2f ' % (0, 20)
-    poisson.plot_pmf(0, 20)
-    poisson.plot_cdf(0, 20)
+    bino.plot_pmf(0, 20)
+    bino.plot_cdf(0, 20)

@@ -141,7 +141,7 @@ class F_dist:
             The sf at each point in x.
         """
         vals = self.cdf(x)
-        x = 1 - vals
+        sf = 1 - vals
 
         return sf
 
@@ -166,8 +166,9 @@ class F_dist:
         ppf: array, dtype=float, shape=(m x n)
             The ppf at each point in x.
         """
-        if x >=0 or x <=1:
-            raise ValueError('x must be between 0 and 1, exclusive')
+        if (x <=0).any() or (x >=1).any():
+            raise ValueError('all values in x must be between 0 and 1, \
+                             exclusive')
         ppf = fdtri(self.d1, self.d2, x)
 
         return ppf
@@ -248,6 +249,8 @@ if __name__ == '__main__':
     print 'x = ', x
     print 'pdf at x = ', f.pdf(x)
     print 'cdf at x = ', f.cdf(x)
+    print 'ppf at x = ', f.ppf(x)
+    print 'sf at x = ', f.sf(x)
     print '6 random_draws ', f.rand_draw(6)
     print 'Plot of pdf from %.2f to %.2f ' % (0, 3)
     print 'Plot of cdf from %.2f to %.2f ' % (0, 3)
