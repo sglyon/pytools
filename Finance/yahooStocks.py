@@ -58,7 +58,7 @@ class StockInfo:
     get_volume = lambda self: float(self.__request('v'))
     get_avg_daily_volume = lambda self: float(self.__request('a2'))
     get_stock_exchange = lambda self: float(self.__request('x'))
-    get_market_cap = lambda self: float(self.__request('j1'))
+    get_market_cap = lambda self: self.__request('j1')
     get_book_value = lambda self: float(self.__request('b4'))
     get_ebitda = lambda self: float(self.__request('j4'))
     get_dividend_per_share = lambda self: float(self.__request('d'))
@@ -73,6 +73,9 @@ class StockInfo:
     get_price_sales_ratio = lambda self: float(self.__request('p5'))
     get_price_book_ratio = lambda self: float(self.__request('p6'))
     get_short_ratio = lambda self: float(self.__request('s7'))
+    get_ex_dividend = lambda self: self.__request('q')
+    get_more_info = lambda self: self.__request('i')
+    get_notes = lambda self: self.__request('n4')
 
     def get_historical_prices(self, start_date, end_date):
         """
@@ -93,3 +96,9 @@ class StockInfo:
         days = urllib.urlopen(url).readlines()
         data = [day[:-2].split(',') for day in days]
         return data
+
+if __name__ == '__main__':
+    aapl = StockInfo('aa')
+    ex_div = aapl.get_ex_dividend()
+    print ex_div
+    print type(ex_div)
