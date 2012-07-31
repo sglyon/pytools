@@ -8,6 +8,7 @@ import os
 import shutil
 from time import strftime
 
+
 def downloadAllTickersFromYahoo():
     if os.path.exists('Status.pck'):
         file = open('Status.pck', "r")

@@ -223,29 +223,22 @@ for ticker in range(len(tickers)):
                             temp_frame2['Num Divs.'] = 1.
 
 
-
-
-
-            #next_div = ex_div_months[ticker] + 3
-            #next_div2 = ex_div_months[ticker] + 6
-            #
-            #if next_div <= op_months[month]:
-            #    if next_div2 <= op_months[month]:
-            #        temp_frame2['Num Divs.'] = 2
-            #    else:
-            #        temp_frame2['Num Divs.'] = 1
-            #else:
-            #    temp_frame2['Num Divs.'] = 0
-
             temp_frame2['Div Inc'] = temp_frame2['Num Divs.'] * \
                                      temp_frame2['Div/share']
 
             temp_frame2['Gain/Loss Exercise'] = temp_frame2['Strike'] - \
                                                 temp_frame2['Stock Price']
 
-            temp_frame2['Total Income'] = temp_frame2['Gain/Loss Exercise'] + \
+            # Don't include gain from stock price movement.
+            losses = temp_frame2['Gain/Loss Exercise'] < 0.0
+            only_losses = temp_frame2['Gain/Loss Exercise'] * losses
+            temp_frame2['Total Income'] = only_losses + \
                                           temp_frame2['Div Inc'] +  \
                                           temp_frame2['Price']
+
+            #temp_frame2['Total Income'] = temp_frame2['Gain/Loss Exercise'] + \
+            #                              temp_frame2['Div Inc'] +  \
+            #                              temp_frame2['Price']
 
             temp_frame2['Return'] = temp_frame2['Total Income'] / \
                                     temp_frame2['Stock Price']
