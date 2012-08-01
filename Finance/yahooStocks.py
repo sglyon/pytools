@@ -61,7 +61,7 @@ class StockInfo:
     get_market_cap = lambda self: self.__request('j1')
     get_book_value = lambda self: float(self.__request('b4'))
     get_ebitda = lambda self: float(self.__request('j4'))
-    get_dividend_per_share = lambda self: float(self.__request('d'))
+    get_dividend_per_share = lambda self: self.__request('d')
     get_dividend_yield = lambda self: float(self.__request('y'))
     get_earnings_per_share = lambda self: float(self.__request('e'))
     get_52_week_high = lambda self: float(self.__request('k'))

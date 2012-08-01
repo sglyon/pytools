@@ -28,28 +28,6 @@ current_month = dt.datetime.now().month
 current_day = dt.datetime.now().date
 current_year = dt.datetime.now().year
 
-
-## TODO:
-#    Get:
-#        stock price
-#        dividend yield
-#        dividend per share
-#        ex dividend date
-#        option price (use avg. of bid/ask. If within 0.01 use bid)
-#        option expiration date
-#        strike price.
-#    Build dad's table:
-#        columns:
-#            1. ticker
-#            2. stock price
-#            3. option price
-#            4. option date
-#            5. ex_dividend date
-#            6. dividend per share
-#            7. gain/loss from stock price movement
-#            8. total income (option price + div/share + gain/loss)
-#            9. return (total income / stock price)
-
 # Generate instances of StockInfo class to get price, dividend yield, div/share,
 #   and ex dividend date
 
@@ -96,52 +74,32 @@ prices = np.asarray(prices)
 
 final_frame = pd.DataFrame()
 
+first_except = 0
+second_except = 0
+third_except = 0
+fourth_except = 0
+
 for ticker in range(len(tickers)):
 
-
-    # Test case for first ticker
     for month in range(0,6):
         try:
             call_frame = Options(tickers[ticker]).get_options_data(op_months[month], op_years[month])[0]
-            start_index = np.where(call_frame['Strike'] > prices[0])[0][0]
+            start_index = np.where(call_frame['Strike'] > prices[ticker])[0][0]
 
 
             temp_frame = pd.DataFrame()
 
             # Appending to the frame if possible.
-            try:
-                get_range = range(start_index - 2, start_index + 3)
-                new_row = call_frame.ix[get_range,:3]
-                temp_frame = temp_frame.join(new_row, how='right')
+            get_range = range(start_index - 2, start_index + 3)
+            new_row = call_frame.ix[get_range,:3]
+            temp_frame = temp_frame.join(new_row, how='right')
 
-            except:
-
-                try:
-                    get_range = range(start_index -1 , start_index + 2)
-                    new_row = call_frame.ix[get_range, :3]
-                    temp_frame = temp_frame.join(new_row, how='right')
-
-                except:
-
-                    try:
-                        get_range = range(start_index, start_index +1)
-                        new_row = call_frame.ix[get_range, :3]
-                        temp_frame = temp_frame.join(new_row, how='right')
-
-                    except:
-                        try:
-                            new_row = call_frame.ix[start_index, :3]
-                            temp_frame = temp_frame.join(new_row, how='right')
-
-                        except:
-                            pass
-
-
-            # Now I should have all the options data for the first month, year combo.
+            # Now we have all the data we need for ticker, month, and year
             temp_frame2 = pd.DataFrame(temp_frame, columns=['Strike',
                                                             'Symbol',
                                                             'Last',
                                                             'Exp. Date',
+                                                            'Option Volume',
                                                             'Stock Price',
                                                             'Ex. Div Date',
                                                             'Num Divs.',
@@ -157,6 +115,7 @@ for ticker in range(len(tickers)):
                                    'Price',
                                    'Exp. Date',
                                    'Stock Price',
+                                   'Option Volume',
                                    'Ex. Div Date',
                                    'Num Divs.',
                                    'Div/share',
@@ -166,13 +125,14 @@ for ticker in range(len(tickers)):
                                    'Return',
                                    'Annual Return']
 
+            temp_frame2['Option Volume'] = call_frame.ix[get_range, 6]
             temp_frame2['Ticker'] = tickers[ticker]
             temp_frame2['Exp. Date'] = str(str(op_months[month]) +
                                            ' - ' +str(op_years[month]))
 
 
             temp_frame2['Stock Price'] = prices[ticker]
-            temp_frame2['Div/share'] = div_per_share[ticker] / 100.
+            temp_frame2['Div/share'] = float(div_per_share[ticker]) / 100.
             temp_frame2['Ex. Div Date'] = str(str(ex_div_months[ticker]) +
                                                ' - ' + str(ex_div_days[ticker]))
 
@@ -265,16 +225,6 @@ file_name = 'covered_call.xlsx'
 writer = ExcelWriter(file_name)
 final_frame.to_excel(writer, sheet_name='Covered Call')
 writer.save()
-
-
-
-
-# TODO: fix the number of dividends column in the data frame. all entries are 0 right now
-
-
-
-
-
 
 end_time = time()
 elapsed_time = end_time - start_time
