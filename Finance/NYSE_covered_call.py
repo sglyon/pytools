@@ -18,7 +18,6 @@ tickers = list(nyse['Symbol'])
 names = list(nyse['Name'])
 market_caps = list(nyse['MarketCap'])
 
-tickers.sort()
 num_tickers = len(tickers)
 
 current_month = dt.datetime.now().month
