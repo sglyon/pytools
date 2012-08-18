@@ -14,10 +14,8 @@ from chebychev import cheb_extrema,chebychev,chebychev2
 
 def enum(d,l):
     r = range(l)
-    b = l - 1
-    #stupid :
     res = []
-    for maximum in range(b+1):
+    for maximum in range(l):
         res.extend( [e for e in product(r, repeat=d ) if sum(e)==maximum ] )
     return res
 
@@ -190,6 +188,31 @@ class SmolyakBasic(object):
         theta = theta.reshape(theta0.shape)
 
         self.theta =  theta
+
+    def plot_grid(self):
+        import matplotlib.pyplot as plt
+        grid = smolyak_grids(self.d, self.l)[0]
+        if grid.shape[1] == 2:
+            xs = grid[:, 0]
+            ys = grid[:, 1]
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            ax.scatter(xs, ys)
+            ax.grid(True, linestyle='--',color='0.75')
+            plt.show()
+        elif grid.shape[1] == 3:
+            from mpl_toolkits.mplot3d import Axes3D
+            xs = grid[:, 0]
+            ys = grid[:, 1]
+            zs = grid[:, 2]
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            ax.scatter(xs, ys, zs)
+            ax.grid(True, linestyle='--',color='0.75')
+            plt.show()
+        else:
+            raise ValueError('Can only plot 2 or 3 dimensional problems')
+
 
 class SmolyakGrid(SmolyakBasic):
 
