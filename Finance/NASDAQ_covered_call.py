@@ -6,11 +6,13 @@ from dateutil import parser
 from options import Options
 import datetime as dt
 from time import time
+from fetch_all_tickers import get_nasdaq
 
 
 start_time = time()
 
-nasdaq = pd.read_csv('NASDAQ_all_tickers.csv')
+get_nasdaq()
+nasdaq = pd.read_csv('nasdaq_tickers.csv')
 
 industries = list(nasdaq['industry'])
 sectors = list(nasdaq['Sector'])
@@ -68,8 +70,6 @@ for i in range(1, to_change + 1):
 
 prices = np.asarray(prices)
 
-
-
 final_frame = pd.DataFrame()
 
 first_except = 0
@@ -79,17 +79,16 @@ fourth_except = 0
 
 for ticker in range(num_tickers):
     if ex_divs[ticker] == 'N/A':
-        for month in range(0,6):
+        for month in range(0, 6):
             try:
                 call_frame = options[ticker].get_options_data(op_months[month], op_years[month])[0]
                 start_index = np.where(call_frame['Strike'] > prices[ticker])[0][0]
-
 
                 temp_frame = pd.DataFrame()
 
                 # Appending to the frame if possible.
                 get_range = range(start_index - 2, start_index + 3)
-                new_row = call_frame.ix[get_range,:3]
+                new_row = call_frame.ix[get_range, :3]
                 temp_frame = temp_frame.join(new_row, how='right')
 
                 # Now we have all the data we need for ticker, month, and year
@@ -112,24 +111,24 @@ for ticker in range(num_tickers):
                                                                 'Return',
                                                                 'Annual Return'])
 
-                temp_frame2.columns =['Name',
-                                      'Ticker',
-                                      'Industry',
-                                      'Sector',
-                                      'Market Cap',
-                                      'Strike',
-                                      'Option Price',
-                                      'Exp. Date',
-                                      'Option Volume',
-                                      'Stock Price',
-                                      'Ex. Div Date',
-                                      'Num Divs.',
-                                      'Div/share',
-                                      'Div Inc',
-                                      'Gain/Loss Exercise',
-                                      'Total Income',
-                                      'Return',
-                                      'Annual Return']
+                temp_frame2.columns = ['Name',
+                                       'Ticker',
+                                       'Industry',
+                                       'Sector',
+                                       'Market Cap',
+                                       'Strike',
+                                       'Option Price',
+                                       'Exp. Date',
+                                       'Option Volume',
+                                       'Stock Price',
+                                       'Ex. Div Date',
+                                       'Num Divs.',
+                                       'Div/share',
+                                       'Div Inc',
+                                       'Gain/Loss Exercise',
+                                       'Total Income',
+                                       'Return',
+                                       'Annual Return']
 
                 temp_frame2['Name'] = names[ticker]
                 temp_frame2['Industry'] = industries[ticker]
@@ -138,8 +137,7 @@ for ticker in range(num_tickers):
                 temp_frame2['Option Volume'] = call_frame.ix[get_range, 6]
                 temp_frame2['Ticker'] = tickers[ticker]
                 temp_frame2['Exp. Date'] = str(str(op_months[month]) +
-                                               ' - ' +str(op_years[month]))
-
+                                               ' - ' + str(op_years[month]))
 
                 temp_frame2['Stock Price'] = prices[ticker]
                 temp_frame2['Div/share'] = 'None'
@@ -161,31 +159,29 @@ for ticker in range(num_tickers):
 
                 time_to_expiration = abs_op_months[month] - current_month
                 temp_frame2['Annual Return'] = temp_frame2['Return'] * \
-                                               (12. /  time_to_expiration)
+                                               (12. / time_to_expiration)
 
                 temp_frame2 = temp_frame2.dropna()
 
                 if month == 0:
-                    final_frame = final_frame.join(temp_frame2, how = 'right')
+                    final_frame = final_frame.join(temp_frame2, how='right')
                 else:
                     final_frame = pd.concat([final_frame, temp_frame2])
-
 
             except:
                 pass
 
     else:
-        for month in range(0,6):
+        for month in range(0, 6):
             try:
                 call_frame = options[ticker].get_options_data(op_months[month], op_years[month])[0]
                 start_index = np.where(call_frame['Strike'] > prices[ticker])[0][0]
-
 
                 temp_frame = pd.DataFrame()
 
                 # Appending to the frame if possible.
                 get_range = range(start_index - 2, start_index + 3)
-                new_row = call_frame.ix[get_range,:3]
+                new_row = call_frame.ix[get_range, :3]
                 temp_frame = temp_frame.join(new_row, how='right')
 
                 # Now we have all the data we need for ticker, month, and year
@@ -208,24 +204,24 @@ for ticker in range(num_tickers):
                                                                 'Return',
                                                                 'Annual Return'])
 
-                temp_frame2.columns =['Name',
-                                      'Ticker',
-                                      'Industry',
-                                      'Sector',
-                                      'Market Cap',
-                                      'Strike',
-                                      'Option Price',
-                                      'Exp. Date',
-                                      'Option Volume',
-                                      'Stock Price',
-                                      'Ex. Div Date',
-                                      'Num Divs.',
-                                      'Div/share',
-                                      'Div Inc',
-                                      'Gain/Loss Exercise',
-                                      'Total Income',
-                                      'Return',
-                                      'Annual Return']
+                temp_frame2.columns = ['Name',
+                                       'Ticker',
+                                       'Industry',
+                                       'Sector',
+                                       'Market Cap',
+                                       'Strike',
+                                       'Option Price',
+                                       'Exp. Date',
+                                       'Option Volume',
+                                       'Stock Price',
+                                       'Ex. Div Date',
+                                       'Num Divs.',
+                                       'Div/share',
+                                       'Div Inc',
+                                       'Gain/Loss Exercise',
+                                       'Total Income',
+                                       'Return',
+                                       'Annual Return']
 
                 temp_frame2['Name'] = names[ticker]
                 temp_frame2['Industry'] = industries[ticker]
@@ -234,8 +230,7 @@ for ticker in range(num_tickers):
                 temp_frame2['Option Volume'] = call_frame.ix[get_range, 6]
                 temp_frame2['Ticker'] = tickers[ticker]
                 temp_frame2['Exp. Date'] = str(str(op_months[month]) +
-                                               ' - ' +str(op_years[month]))
-
+                                               ' - ' + str(op_years[month]))
 
                 temp_frame2['Stock Price'] = prices[ticker]
                 temp_frame2['Div/share'] = float(div_per_share[ticker]) / 100.
@@ -245,7 +240,6 @@ for ticker in range(num_tickers):
                 # Figure out number of dividends.
                 next_ex_div_month = ex_div_months[ticker] + 3
                 two_next_ex_div_months = ex_div_months[ticker] + 6
-
 
                 if current_month > ex_div_months[ticker]:
                     if abs_op_months[month] < next_ex_div_month:
@@ -288,7 +282,6 @@ for ticker in range(num_tickers):
                             else:
                                 temp_frame2['Num Divs.'] = 1.
 
-
                 temp_frame2['Div Inc'] = temp_frame2['Num Divs.'] * \
                                          temp_frame2['Div/share']
 
@@ -311,15 +304,14 @@ for ticker in range(num_tickers):
 
                 time_to_expiration = abs_op_months[month] - current_month
                 temp_frame2['Annual Return'] = temp_frame2['Return'] * \
-                                               (12. /  time_to_expiration)
+                                               (12. / time_to_expiration)
 
                 temp_frame2 = temp_frame2.dropna()
 
                 if month == 0:
-                    final_frame = final_frame.join(temp_frame2, how = 'right')
+                    final_frame = final_frame.join(temp_frame2, how='right')
                 else:
                     final_frame = pd.concat([final_frame, temp_frame2])
-
 
             except:
                 pass
@@ -327,7 +319,7 @@ for ticker in range(num_tickers):
     print 'Just finished ticker %s of %s' % (ticker, num_tickers)
 
 
-file_name = 'NYSE_covered_call.xlsx'
+file_name = 'NASDAQ_covered_call.xlsx'
 writer = ExcelWriter(file_name)
 final_frame.to_excel(writer, sheet_name='Covered Call')
 writer.save()

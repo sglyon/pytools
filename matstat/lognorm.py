@@ -10,8 +10,9 @@ from scipy.special import erf
 from normal import Normal
 import matplotlib.pyplot as plt
 
+
 class Lognorm:
-    def __init__(self, mu = 0, sigma = 1.):
+    def __init__(self, mu=0, sigma=1.):
         """
         Initializes an object of Lognormal distribution type. We instantiate
         the object as well as some common statistics about it. This will also
@@ -39,20 +40,19 @@ class Lognorm:
         [2]: www.http://en.wikipedia.org/wiki/Log-normal_distribution
         [3]: scipy.stats.distributions
         """
-        if mu < 0 or sigma <0:
-            raise ValueError('mean and standard deviation must be non-negative')
+        if sigma < 0:
+            raise ValueError('standard deviation must be non-negative')
         else:
             self.support = '(0, inf)'
             self.mu = mu
             self.sigma = sigma
-            self.mode = exp( mu - sigma ** 2)
+            self.mode = exp(mu - sigma ** 2)
             self.median = exp(mu)
             self.mean = exp((mu + sigma) / 2)
-            self.variance = (exp(sigma**2) - 1) * exp(2 * mu + sigma ** 2)
+            self.variance = (exp(sigma ** 2) - 1) * exp(2 * mu + sigma ** 2)
             self.skewness = (exp(sigma ** 2) + 2) * sqrt(exp(sigma ** 2) - 1)
             self.ex_kurtosis = exp(4 * sigma ** 2) + 2 * exp(3 * sigma ** 2) + \
-                               3 * exp(2 * sigma ** 2)  -6
-
+                               3 * exp(2 * sigma ** 2) - 6
 
     def pdf(self, x):
         """
@@ -75,11 +75,10 @@ class Lognorm:
         """
         root_2_pi = sqrt(2 * pi)
         coef = 1 / (x * self.sigma * root_2_pi)
-        pdf = np.exp(-((np.log(x) - self.mu) / (sqrt(2) * self.sigma)) ** 2)
+        pdf = np.exp(-(np.log(x) - self.mu) ** 2 / (2 * self.sigma ** 2))
         pdf *= coef
 
         return pdf
-
 
     def cdf(self, x):
         """
@@ -105,7 +104,6 @@ class Lognorm:
 
         return cdf
 
-
     def rand_draw(self, n):
         """
         Return a random draw from the distribution
@@ -124,7 +122,6 @@ class Lognorm:
         draw = np.exp(self.sigma * norm.rand_draw(n))
 
         return draw
-
 
     def sf(self, x):
         """
@@ -147,7 +144,6 @@ class Lognorm:
         sf = 1 - vals
 
         return sf
-
 
     def ppf(self, x):
         """
@@ -177,7 +173,6 @@ class Lognorm:
 
         return ppf
 
-
     def plot_pdf(self, low, high):
         """
         Plots the pdf of the distribution from low to high.
@@ -201,13 +196,12 @@ class Lognorm:
         x = np.linspace(low, high, 300)
         plt.figure()
         plt.plot(x, self.pdf(x))
-        plt.title('ln N(%.1f, %.1f): PDF from %.2f to %.2f' %(self.mu,
+        plt.title('ln N(%.1f, %.1f): PDF from %.2f to %.2f' % (self.mu,
                                                               self.sigma,
                                                               low,  high))
         plt.show()
 
         return
-
 
     def plot_cdf(self, low, high):
         """
@@ -232,7 +226,7 @@ class Lognorm:
         x = np.linspace(low, high, 400)
         plt.figure()
         plt.plot(x, self.cdf(x))
-        plt.title('ln N(%.1f, %.1f): PDF from %.2f to %.2f' %(self.mu,
+        plt.title('ln N(%.1f, %.1f): PDF from %.2f to %.2f' % (self.mu,
                                                               self.sigma,
                                                               low,  high))
         plt.show()
