@@ -11,8 +11,9 @@ from fetch_all_tickers import get_nyse
 
 start_time = time()
 
-get_nyse()
+# get_nyse()
 nyse = pd.read_csv('nyse_tickers.csv')
+print nyse
 
 industries = list(nyse['industry'])
 sectors = list(nyse['Sector'])
