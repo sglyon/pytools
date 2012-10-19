@@ -8,6 +8,9 @@ import datetime as dt
 from time import time
 from fetch_all_tickers import get_nasdaq
 
+# TODO: Add volatility column.
+# TODO: Make ticker the index.
+
 
 start_time = time()
 
