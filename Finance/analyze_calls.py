@@ -66,29 +66,61 @@ def volatility(ticker):
 
     return [ann_volaltilty, monthly_volatilty]
 
-nasdaq_file = pd.io.parsers.ExcelFile('NASDAQ_covered_call.xlsx')
-df = nasdaq_file.parse('Covered Call')
-nasdaq = df.set_index('Ticker')
-# NOTE: also try nasdaq = df.set_index(['Industry', 'Ticker'])
-pos_nasdaq = nasdaq[nasdaq['Annual Return'] > 0]
+# nasdaq_file = pd.io.parsers.ExcelFile('NASDAQ_covered_call.xlsx')
+# df = nasdaq_file.parse('Covered Call')
+# df['Market'] = 'NASDAQ'
+# nyse_file = pd.io.parsers.ExcelFile('NYSE_covered_call.xlsx')
+# df2 = nyse_file.parse('Covered Call')
+# df2['Market'] = 'NYSE'
+# df3 = pd.concat([df, df2])
+# ticks = df3.Ticker.unique()
 
-sorts = pos_nasdaq.sort_index(by=['Industry', 'Annual Return'],
-                                 ascending=False)
-sorts = sorts[sorts.Industry != 'n/a']
+# # Find volatility and add a column for it
+# vols = dict([(i, simple_vol(i)) for i in ticks])
+# df3['Volatility'] = df3['Ticker'].map(vols)
 
-industries = []
-for i in sorts.Industry.unique():
-    industries.append(str(i))
+# # We want some returns
+# more_than_7 = df3[df3['Annual Return'] > 0.07]
 
-ticks = np.array(sorts.Ticker.unique(), dtype=str)
+# # Change index
+# more_than_7 = more_than_7.set_index('Ticker')
 
-vols = dict([(i, simple_vol(i)) for i in ticks])
+# # Properly create and sort multi-index df
+# multi = df3.set_index(['Industry', 'Ticker'])
+# multi = multi.sort('Annual Return', ascending=0).sort_index()
 
-sorts['Volatility'] = np.nan
-for i in ticks:
-    sorts.ix[i, 'Volatility'] = vols[i]
+# # Sort stuff and keep only lines where industry is known.
+# sorts = more_than_7.sort_index(by=['Industry', 'Annual Return'],
+#                                  ascending=False)
+# sorts = sorts[sorts.Industry != 'n/a']
 
-# file_name = 'NASDAQ_try2.xlsx'
+# industries = np.array(sorts['Industry'].unique(), dtype=str)
+
+# file_name = 'Combined_Volatility.xlsx'
 # writer = ExcelWriter(file_name)
-# sorts.to_excel(writer, sheet_name='With Volatility')
+# sorts.to_excel(writer, sheet_name='All')
 # writer.save()
+re_order_cols = ['Name', 'Industry', 'Sector', 'Market Cap', 'Strike',
+                 'Exp. Date', 'Option Volume', 'Option Price', 'Stock Price',
+                 'Ex. Div Date', 'Num Divs.', 'Div/share', 'Div Inc',
+                 'Gain/Loss Exercise', 'Total Income', 'Return',
+                 'Annual Return', 'Market', 'Volatility',
+                 'Div per Share / Price']
+
+combined_file = pd.io.parsers.ExcelFile('Combined_Volatility.xlsx')
+df = combined_file.parse('All')
+sorts = df.set_index('Ticker')
+only_divs = sorts[sorts['Ex. Div Date'] != 'None']
+stable = only_divs[only_divs.Volatility <= 0.08]
+close = stable[np.abs(stable['Gain/Loss Exercise']) <= 1]
+close['Div per Share / Price'] = close['Div/share'] / close['Stock Price']
+highest = close['Div per Share / Price'].argsort()[::-1]
+
+re_order_cols = ['Name', 'Industry', 'Sector', 'Market Cap', 'Stock Price',
+                 'Strike', 'Exp. Date', 'Option Volume', 'Option Price',
+                 'Ex. Div Date', 'Num Divs.', 'Div/share', 'Div Inc',
+                 'Gain/Loss Exercise', 'Total Income', 'Return',
+                 'Annual Return', 'Market', 'Volatility',
+                 'Div per Share / Price']
+
+close = close[re_order_cols]
