@@ -11,9 +11,10 @@ from fetch_all_tickers import get_nyse
 
 start_time = time()
 
-# get_nyse()
+get_nyse()
 nyse = pd.read_csv('nyse_tickers.csv')
-print nyse
+nyse = nyse.drop(['ADR TSO', 'LastSale', 'IPOyear', 'Unnamed: 9',
+                      'Summary Quote'], axis=1)
 
 industries = list(nyse['industry'])
 sectors = list(nyse['Sector'])

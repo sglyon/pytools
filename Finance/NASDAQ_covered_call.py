@@ -13,6 +13,8 @@ start_time = time()
 
 get_nasdaq()
 nasdaq = pd.read_csv('nasdaq_tickers.csv')
+nasdaq = nasdaq.drop(['ADR TSO', 'LastSale', 'IPOyear', 'Unnamed: 9',
+                      'Summary Quote'], axis=1)
 
 industries = list(nasdaq['industry'])
 sectors = list(nasdaq['Sector'])
