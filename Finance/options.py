@@ -1,43 +1,64 @@
-from BeautifulSoup import BeautifulSoup
-from urllib2 import urlopen
-from pandas.io.parsers import TextParser, ExcelWriter
+import urllib2
+from pandas import DataFrame, concat
+from pandas.io.parsers import TextParser
 from datetime import datetime
 from pandas.io.data import get_quote_yahoo
 import numpy as np
-import pandas as pd
 
-cur_month = datetime.now().month
-cur_year = datetime.now().year
+# Items needed for options class
+cur_month = dt.datetime.now().month
+cur_year = dt.datetime.now().year
 
 
 def _unpack(row, kind='td'):
-    return [val.text for val in row.findAll(kind)]
+    elts = row.findall('.//%s' % kind)
+    return[val.text_content() for val in elts]
 
 
 def _parse_options_data(table):
-    rows = table.findAll('tr')
+    rows = table.findall('.//tr')
     header = _unpack(rows[0], kind='th')
     data = [_unpack(r) for r in rows[1:]]
     return TextParser(data, names=header).get_chunk()
 
 
-class Options():
+class Options(object):
     """
-    This class fetches call/put data for a given stock/expiration month.
+    This class fetches call/put data for a given stock/exipry month.
 
     It is instantiated with a string representing the ticker symbol.
 
     The class has the following methods:
         get_options_data:(month, year)
         get_call_data:(month, year)
-        get_pu_data: (month, year)
+        get_put_data: (month, year)
+        get_near_stock_price(opt_frame, above_below)
+        get_forward_data(months, call, put)
+
+    Examples
+    --------
+    # Instantiate object with ticker
+    >>> aapl = Options('aapl')
+
+    # Fetch September 2012 call data
+    >>> calls = aapl.get_call_data(9, 2012)
+
+    # Fetch September 2012 put data
+    >>> puts = aapl.get_put_data(9, 2012)
+
+    # cut down the call data to be 3 below and 3 above the stock price.
+    >>> cut_calls = aapl.get_near_stock_price(calls, above_below=3)
+
+    # Fetch call and put data with expiry from now to 8 months out
+    >>> forward_calls, forward_puts = aapl.get_forward_data(8,
+        ...                                        call=True, put=True)
     """
 
     def __init__(self, symbol):
         """ Instantiates options_data with a ticker saved as symbol """
         self.symbol = str(symbol).upper()
 
-    def get_options_data(self, month=cur_month, year=cur_year, excel=False):
+    def get_options_data(self, month=None, year=None):
         """
         Gets call/put data for the stock with the expiration data in the
         given month and year
@@ -45,17 +66,11 @@ class Options():
         Parameters
         ----------
         month: number, int
-            The month of the options expire.
+            The month the options expire.
 
         year: number, int
             The year the options expire.
 
-        excel: bool, optional(default=False)
-            A boolean value indicating whether or not the data should be saved
-            to an excel spreadsheet. If true the name of the file will be
-            "'ticker'_options.xlsx" unless otherwise indicated. Also there will
-            be two sheets created. The first one is named 'calls' and contains
-            the call data and the second is for the puts.
 
         Returns
         -------
@@ -65,140 +80,146 @@ class Options():
         put_data: pandas.DataFrame
             A DataFrame with call options data.
         """
+        from lxml.html import parse
 
-        mon_in = month if len(str(month)) == 2 else str('0' + str(month))
+        if month and year:  # try to get specified month from yahoo finance
+            m1 = month if len(str(month)) == 2 else str('0' + str(month))
+            m2 = month
 
-        url = str('http://finance.yahoo.com/q/op?s=' + self.symbol + '&m=' +
-                  str(year) + '-' + str(mon_in))
+            if m1 != cur_month and m2 != cur_month:  # if this month use other url
+                url = str('http://finance.yahoo.com/q/op?s=' + self.symbol +
+                          '&m=' + str(year) + '-' + str(m1))
 
-        buf = urlopen(url)
-        soup = BeautifulSoup(buf)
-        body = soup.body
+            else:
+                url = str('http://finance.yahoo.com/q/op?s=' + self.symbol +
+                                                            '+Options')
 
-        tables = body.findAll('table')
+        else:  # Default to current month
+            url = str('http://finance.yahoo.com/q/op?s=' + self.symbol +
+                                                            '+Options')
+
+        parsed = parse(urllib2.urlopen(url))
+        doc = parsed.getroot()
+        tables = doc.findall('.//table')
         calls = tables[9]
         puts = tables[13]
 
         call_data = _parse_options_data(calls)
         put_data = _parse_options_data(puts)
 
-        if excel == True:
-            file_name = str(str(self.symbol).upper() + '_options.xlsx')
-            writer = ExcelWriter(file_name)
-            put_data.to_excel(writer, sheet_name='puts')
-            call_data.to_excel(writer, sheet_name='calls')
-            writer.save()
+        self.calls = call_data
+        self.puts = put_data
 
         return [call_data, put_data]
 
-    def get_call_data(self, month=cur_month, year=cur_year, excel=False):
+    def get_call_data(self, month=None, year=None):
         """
         Gets call/put data for the stock with the expiration data in the
         given month and year
 
         Parameters
         ----------
-        month: number, int
-            The month of the options expire.
+        month: number, int, optional(default=None)
+            The month the options expire.
 
-        year: number, int
+        year: number, int, optional(defaule=None)
             The year the options expire.
-
-        excel: bool, optional(default=False)
-            A boolean value indicating whether or not the data should be saved
-            to an excel spreadsheet. If true the name of the file will be
-            "'ticker'_options.xlsx" unless otherwise indicated. Also there will
-            be two sheets created. The first one is named 'calls' and contains
-            the call data and the second is for the puts.
 
         Returns
         -------
         call_data: pandas.DataFrame
             A DataFrame with call options data.
-
-        put_data: pandas.DataFrame
-            A DataFrame with call options data.
         """
+        from lxml.html import parse
 
-        mon_in = month if len(str(month)) == 2 else str('0' + str(month))
+        if month and year:  # try to get specified month from yahoo finance
+            m1 = month if len(str(month)) == 2 else str('0' + str(month))
+            m2 = month
 
-        url = str('http://finance.yahoo.com/q/op?s=' + self.symbol + '&m=' +
-                  str(year) + '-' + str(mon_in))
+            if m1 != cur_month and m2 != cur_month:  # if this month use other url
+                url = str('http://finance.yahoo.com/q/op?s=' + self.symbol +
+                          '&m=' + str(year) + '-' + str(m1))
 
-        buf = urlopen(url)
-        soup = BeautifulSoup(buf)
-        body = soup.body
+            else:
+                url = str('http://finance.yahoo.com/q/op?s=' + self.symbol +
+                                                            '+Options')
 
-        tables = body.findAll('table')
+        else:  # Default to current month
+            url = str('http://finance.yahoo.com/q/op?s=' + self.symbol +
+                                                            '+Options')
+
+        parsed = parse(urllib2.urlopen(url))
+        doc = parsed.getroot()
+        tables = doc.findall('.//table')
         calls = tables[9]
 
         call_data = _parse_options_data(calls)
 
-        if excel == True:
-            file_name = str(str(self.symbol).upper() + '_calls.xlsx')
-            writer = ExcelWriter(file_name)
-            call_data.to_excel(writer, sheet_name='calls')
-            writer.save()
+        self.calls = call_data
 
         return call_data
 
-    def get_put_data(self, month=cur_month, year=cur_year, excel=False):
+    def get_put_data(self, month=None, year=None):
         """
         Gets put data for the stock with the expiration data in the
         given month and year
 
         Parameters
         ----------
-        month: number, int
-            The month of the options expire.
+        month: number, int, optional(default=None)
+            The month the options expire.
 
-        year: number, int
+        year: number, int, optional(defaule=None)
             The year the options expire.
-
-        excel: bool, optional(default=False)
-            A boolean value indicating whether or not the data should be saved
-            to an excel spreadsheet. If true the name of the file will be
-            "'ticker'_options.xlsx" unless otherwise indicated. Also there will
-            be two sheets created. The first one is named 'calls' and contains
-            the call data and the second is for the puts.
 
         Returns
         -------
         put_data: pandas.DataFrame
             A DataFrame with call options data.
         """
+        from lxml.html import parse
 
-        mon_in = month if len(str(month)) == 2 else str('0' + str(month))
+        if month and year:  # try to get specified month from yahoo finance
+            m1 = month if len(str(month)) == 2 else str('0' + str(month))
+            m2 = month
 
-        url = str('http://finance.yahoo.com/q/op?s=' + self.symbol + '&m=' +
-                  str(year) + '-' + str(mon_in))
+            if m1 != cur_month and m2 != cur_month:  # if this month use other url
+                url = str('http://finance.yahoo.com/q/op?s=' + self.symbol +
+                          '&m=' + str(year) + '-' + str(m1))
 
-        buf = urlopen(url)
-        soup = BeautifulSoup(buf)
-        body = soup.body
+            else:
+                url = str('http://finance.yahoo.com/q/op?s=' + self.symbol +
+                                                            '+Options')
 
-        tables = body.findAll('table')
+        else:  # Default to current month
+            url = str('http://finance.yahoo.com/q/op?s=' + self.symbol +
+                                                            '+Options')
+
+        parsed = parse(urllib2.urlopen(url))
+        doc = parsed.getroot()
+        tables = doc.findall('.//table')
         puts = tables[13]
 
         put_data = _parse_options_data(puts)
 
-        if excel == True:
-            file_name = str(str(self.symbol).upper() + '_puts.xlsx')
-            writer = ExcelWriter(file_name)
-            put_data.to_excel(writer, sheet_name='puts')
-            writer.save()
+        self.puts = put_data
 
         return put_data
 
-    def get_near_stock_price(self, opt_df, above_below=2):
+    def get_near_stock_price(self, call=True, put=False, above_below=2):
         """
         Cuts the data frame opt_df that is passed in to only take
         options that are near the current stock price.
 
         Parameters
         ----------
-        opt_df: DataFrame
-            The DataFrame that will be passed in to be cut down.
+        call: bool
+            Tells the function weather or not it should be using
+            self.calls
+
+        put: bool
+            Tells the function weather or not it should be using
+            self.puts
 
         above_below: number, int, optional (default=2)
             The number of strike prices above and below the stock price that
@@ -211,7 +232,21 @@ class Options():
             desired. If there isn't data as far out as the user has asked for
             then
         """
-        price = get_quote_yahoo(['aapl'])['last']
+        price = float(get_quote_yahoo([self.symbol])['last'])
+        if call == True and put == True:
+            raise ValueError('Do either calls or puts, but just one at at time')
+
+        if call == True:
+            try:
+                opt_df = self.calls
+            except AttributeError:
+                opt_df = self.get_call_data()
+        else:
+            try:
+                opt_df = self.puts
+            except AttributeError:
+                opt_df = self.get_put_data()
+
         start_index = np.where(opt_df['Strike'] > price)[0][0]
 
         get_range = range(start_index - above_below,
@@ -266,7 +301,7 @@ class Options():
             in_years[-i] += 1
 
         if call:
-            all_calls = pd.DataFrame()
+            all_calls = DataFrame()
             for mon in range(months):
                 try:  # This catches cases when there isn't data for a month
                     call_frame = self.get_call_data(in_months[mon],
@@ -281,12 +316,12 @@ class Options():
                     if mon == 0:
                         all_calls = all_calls.join(call_frame, how='right')
                     else:
-                        all_calls = pd.concat([all_calls, call_frame])
+                        all_calls = concat([all_calls, call_frame])
                 except:
                     pass
 
         if put:
-            all_puts = pd.DataFrame()
+            all_puts = DataFrame()
             for mon in range(months):
                 try:  # This catches cases when there isn't data for a month
                     put_frame = self.get_put_data(in_months[mon],
@@ -304,7 +339,7 @@ class Options():
                     if mon == 0:
                         all_puts = all_puts.join(put_frame, how='right')
                     else:
-                        all_puts = pd.concat([all_puts, put_frame])
+                        all_puts = concat([all_puts, put_frame])
                 except:
                     pass
 
@@ -315,10 +350,3 @@ class Options():
                 return all_calls
             else:
                 return all_puts
-
-
-if __name__ == '__main__':
-    aapl = Options('aapl')
-    calls = aapl.get_call_data()
-    puts = aapl.get_put_data()
-    chopper = aapl.get_near_stock_price(calls)

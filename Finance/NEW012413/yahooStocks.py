@@ -61,7 +61,7 @@ class StockInfo:
     get_market_cap = lambda self: self.__request('j1')
     get_book_value = lambda self: float(self.__request('b4'))
     get_ebitda = lambda self: float(self.__request('j4'))
-    get_dividend_yield_share = lambda self: self.__request('d0')
+    get_dividend_yield_share = lambda self: float(self.__request('d0'))
     get_dividend_yield_pct = lambda self: float(self.__request('y0'))
     get_earnings_per_share = lambda self: float(self.__request('e'))
     get_52_week_high = lambda self: float(self.__request('k'))
@@ -73,9 +73,23 @@ class StockInfo:
     get_price_sales_ratio = lambda self: float(self.__request('p5'))
     get_price_book_ratio = lambda self: float(self.__request('p6'))
     get_short_ratio = lambda self: float(self.__request('s7'))
-    get_ex_dividend = lambda self: self.__request('q')
     get_more_info = lambda self: self.__request('i')
     get_notes = lambda self: self.__request('n4')
+
+    def get_ex_dividend(self):
+        import datetime as dt
+        year = dt.datetime.now().year - 1
+        div = self.__request('q0')
+        div = div.replace(' ', '')
+        if len(div) < 9:
+            dm = div[:3]
+            dd = div[3:]
+            dy = str(year)
+            div = str(dd + '-' + dm + '-' + dy)
+
+        return div
+
+
 
     def get_historical_prices(self, start_date, end_date):
         """
