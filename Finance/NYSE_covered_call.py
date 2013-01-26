@@ -321,11 +321,20 @@ for ticker in range(num_tickers):
     print 'Just finished ticker %s of %s' % (ticker, num_tickers)
 
 
-file_name = 'NYSE_covered_call.xlsx'
+today = str(str(dt.datetime.now().month) +
+            str(dt.datetime.now().day) +
+            str(dt.datetime.now().year))
+
+file_name = 'NYSE_covered_call' + today
+xlsx = '.xlsx'
+csv = '.csv'
+name_xl = file_name + xlsx
+name_cs = file_name + csv
 writer = ExcelWriter(file_name)
 final_frame.to_excel(writer, sheet_name='Covered Call')
 writer.save()
 
+final_frame.to_csv(name_cs)
 end_time = time()
 elapsed_time = end_time - start_time
 print elapsed_time

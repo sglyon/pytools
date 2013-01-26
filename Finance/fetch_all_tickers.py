@@ -26,8 +26,6 @@ def get_nasdaq(fileName='nasdaq_tickers.csv'):
     This function gets the data from the following url:
     http://www.nasdaq.com/screening/companies-by-name.aspx?\
         letter=0&exchange=nasdaq&render=download
-
-    where teh '\' is just to make sure the line is too long (remove it)
     """
     first_half = 'http://www.nasdaq.com/screening/companies-by-name.aspx'
     second_half = '?letter=0&exchange=nasdaq&render=download'
@@ -54,8 +52,6 @@ def get_nyse(fileName='nyse_tickers.csv'):
     This function gets the data from the following url:
     http://www.nasdaq.com/screening/companies-by-name.aspx?\
         letter=0&exchange=nasdaq&render=download
-
-    where teh '\' is just to make sure the line is too long (remove it)
     """
     first_half = 'http://www.nasdaq.com/screening/companies-by-name.aspx'
     second_half = '?letter=0&exchange=nyse&render=download'

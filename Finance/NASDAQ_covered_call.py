@@ -6,7 +6,33 @@ from dateutil import parser
 from options import Options
 import datetime as dt
 from time import time
-from fetch_all_tickers import get_nasdaq
+import urllib
+
+
+def get_nasdaq(fileName='nasdaq_tickers.csv'):
+    """
+    Fetches a csv file with all the nasdaq tickers.
+
+    Parameters
+    ----------
+    fileName: str, optional(default=nasdaq.csv)
+        The file name it should be saved under. This is optional
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    This function gets the data from the following url:
+    http://www.nasdaq.com/screening/companies-by-name.aspx?\
+        letter=0&exchange=nasdaq&render=download
+    """
+    first_half = 'http://www.nasdaq.com/screening/companies-by-name.aspx'
+    second_half = '?letter=0&exchange=nasdaq&render=download'
+    total = first_half + second_half
+    urllib.urlretrieve(total, fileName)
+    return
 
 # TODO: Add volatility column.
 # TODO: Make ticker the index.
@@ -16,19 +42,22 @@ start_time = time()
 
 get_nasdaq()
 nasdaq = pd.read_csv('nasdaq_tickers.csv')
-nasdaq = nasdaq.drop(['ADR TSO', 'LastSale', 'IPOyear', 'Unnamed: 9',
-                      'Summary Quote'], axis=1)
 
-industries = list(nasdaq['industry'])
-sectors = list(nasdaq['Sector'])
-tickers = list(nasdaq['Symbol'])
-names = list(nasdaq['Name'])
-market_caps = list(nasdaq['MarketCap'])
+nas = nasdaq[['Name', 'MarketCap', 'Sector', 'industry']]
+nas.index = nasdaq.Symbol
 
-num_tickers = len(tickers)
+nas.sort_index(inplace=True)
+
+industries = nas.industry
+sectors = nas.Sector
+tickers = nas.index
+names = nas.Name
+market_caps = nas.MarketCap
+
+num_tickers = tickers.size
 
 current_month = dt.datetime.now().month
-current_day = dt.datetime.now().date
+current_day = dt.datetime.now().day
 current_year = dt.datetime.now().year
 
 # Generate instances of StockInfo class to get price, dividend yield, div/share,
@@ -76,11 +105,6 @@ for i in range(1, to_change + 1):
 prices = np.asarray(prices)
 
 final_frame = pd.DataFrame()
-
-first_except = 0
-second_except = 0
-third_except = 0
-fourth_except = 0
 
 for ticker in range(num_tickers):
     if ex_divs[ticker] == 'N/A':
@@ -323,12 +347,20 @@ for ticker in range(num_tickers):
 
     print 'Just finished ticker %s of %s' % (ticker, num_tickers)
 
+today = str(str(dt.datetime.now().month) +
+            str(dt.datetime.now().day) +
+            str(dt.datetime.now().year))
 
-file_name = 'NASDAQ_covered_call.xlsx'
+file_name = 'NASDAQ_covered_call' + today
+xlsx = '.xlsx'
+csv = '.csv'
+name_xl = file_name + xlsx
+name_cs = file_name + csv
 writer = ExcelWriter(file_name)
 final_frame.to_excel(writer, sheet_name='Covered Call')
 writer.save()
 
+final_frame.to_csv(name_cs)
 end_time = time()
 elapsed_time = end_time - start_time
 print elapsed_time
