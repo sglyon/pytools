@@ -89,20 +89,19 @@ def equity_data(x):
     """
     tick = x.name
     stock = StockInfo(tick)
-
-    price = stock.get_price()
-
-    # Compute volatility of given stock
-    hist = get_data_yahoo(tick, start=sstart, end=eend)
-    history = hist['Adj Close']
-    num_days = history.size
-    returns = history.pct_change() + 1
-    log_returns = np.log(returns) ** 2.
-    ann_volaltilty = (log_returns.std(ddof=1) / log_returns.mean())
-    ann_volaltilty /= np.sqrt(1. / num_days)
-    # monthly_volatilty = ann_volaltilty * np.sqrt(1. / 12)
-
     try:
+        price = stock.get_price()
+
+        # Compute volatility of given stock
+        hist = get_data_yahoo(tick, start=sstart, end=eend)
+        history = hist['Adj Close']
+        num_days = history.size
+        returns = history.pct_change() + 1
+        log_returns = np.log(returns) ** 2.
+        ann_volaltilty = (log_returns.std(ddof=1) / log_returns.mean())
+        ann_volaltilty /= np.sqrt(1. / num_days)
+        monthly_volatilty = ann_volaltilty * np.sqrt(1. / 12)
+
         div_date = stock.get_ex_dividend()
         month = parser.parse(div_date).month
         day = parser.parse(div_date).day
@@ -120,6 +119,8 @@ def equity_data(x):
         day = 'NA'
         year = 'NA'
         div_share = np.nan
+        price = np.nan
+        monthly_volatilty = np.nan
 
     x['exdivdate'] = str(str(month) + '-' + str(day) + '-' + str(year))
     x['divmonth'] = month
@@ -127,7 +128,7 @@ def equity_data(x):
     x['divyear'] = year
     x['StockPrice'] = price
     x['DivShare'] = div_share
-    x['Volatility'] = ann_volaltilty / price
+    x['Volatility'] = monthly_volatilty
 
     return x
 
