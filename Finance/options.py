@@ -1,7 +1,7 @@
 import urllib2
 from pandas import DataFrame, concat
 from pandas.io.parsers import TextParser
-from datetime import datetime
+import datetime as dt
 from pandas.io.data import get_quote_yahoo
 import numpy as np
 

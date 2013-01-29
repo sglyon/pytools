@@ -19,11 +19,13 @@ from __future__ import division
 import numpy as np
 import pandas as pd
 from pandas.io.parsers import ExcelWriter
-from pandas.io.data import Options, get_data_yahoo
+from pandas.io.data import Options, get_data_yahoo, _parse_options_data
 from yahooStocks import StockInfo
 from dateutil import parser
 import datetime as dt
 import urllib
+from lxml.html import parse
+import urllib2
 
 pd.set_option('line', 200)
 
@@ -101,25 +103,31 @@ def equity_data(x):
     # monthly_volatilty = ann_volaltilty * np.sqrt(1. / 12)
 
     try:
-        div_data = stock.get_ex_dividend()
-        month = parser.parse(div_data).month
-        day = parser.parse(div_data).day
-        year = parser.parse(div_data).year
-        div_yield = stock.get_dividend_yield_share()
+        div_date = stock.get_ex_dividend()
+        month = parser.parse(div_date).month
+        day = parser.parse(div_date).day
+        year = parser.parse(div_date).year
+
+        # scrape html to get dividend data
+        url = 'http://finance.yahoo.com/q/ks?s=%s+Key+Statistics' % (tick)
+        parsed = parse(urllib2.urlopen(url))
+        doc = parsed.getroot()
+        tables = doc.findall('.//table')
+        data = _parse_options_data(tables[28])
+        div_share = float(data.ix[1].astype(float))
     except:  # No dividend data
         month = 'NA'
         day = 'NA'
         year = 'NA'
-        div_yield = np.nan
+        div_share = np.nan
 
     x['exdivdate'] = str(str(month) + '-' + str(day) + '-' + str(year))
     x['divmonth'] = month
     x['divday'] = day
     x['divyear'] = year
     x['StockPrice'] = price
-    x['DivYield'] = div_yield
-    x['DivShare'] = div_yield / 12 * price
-    x['Volatility'] = ann_volaltilty
+    x['DivShare'] = div_share
+    x['Volatility'] = ann_volaltilty / price
 
     return x
 
@@ -192,7 +200,6 @@ big['divmonth'] = np.nan
 big['divday'] = np.nan
 big['divyear'] = np.nan
 big['StockPrice'] = np.nan
-big['DivYield'] = np.nan
 big['DivShare'] = np.nan
 big['Volatility'] = np.nan
 
