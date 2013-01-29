@@ -210,6 +210,18 @@ opts = fill_option_data(big)
 
 big = big.join(opts)
 
+# NOTE: Save/read big to/from csv. This is necessary because from_csv has good
+# N/A handling that I don't want to worry about doing by myself.
+name = 'big_after_opt_join' + eend + '.csv'
+big.to_csv(name)
+big = pd.DataFrame.from_csv(name)
+
+# Replace strings 'N/A' in big.Last with np.nan
+big.Last = big.Last.replace('N/A', np.nan).astype(float)
+
+# Drop columns that aren't meaningful
+big = big.dropna()
+
 # Get ex dividend dates
 divday = big.divday
 divmonth = big.divmonth
@@ -222,73 +234,91 @@ current_day = dt.datetime.now().day
 current_month = dt.datetime.now().month
 current_year = dt.datetime.now().year
 
-op_months, op_years = date_range()
-abs_op_months = np.arange(current_month + 1, current_month + 1 + plus)
-
 # Create column for num divs
-big['NumDivs'] = np.nan
+big['NumDivs'] = 0
 numDivs = np.zeros(divmonth.size)
 
 # Get option expiry data
 mat_month = big.Expiry.str[:2].astype(float)
-mat_day = big.Expiry.str[3:5].astype(float)
+# mat_day = big.Expiry.str[3:5].astype(float)
 
+m_month = big.Expiry.str.split('-').str.get(0).astype(float)
+m_day = big.Expiry.str.split('-').str.get(1).astype(float)
+
+# Array of relative current months
+c_month = np.ones(big.shape[0]) * current_month
+c_month += 12 * (current_year - divyear)
+
+# Array of relative expiry months
+m_month += 12 * (current_year - divyear)
+
+# Array of relative ex-div months (last dividend and next two)
+d_month = divmonth + 12 * (current_year - divyear)
+dp_month = d_month + 3
+dpp_month = d_month + 6
+
+# Array of ex-div days
+d_day = divday
 
 # Loop over all expirations and get num divs
 for i in range(divmonth.size):
-    current_month = dt.datetime.now().month
-    _m_month = mat_month[i]
+    # Get dividend items
+    _d_year = divyear[i]
+    _d_month = d_month[i]
+    _dp_month = dp_month[i]
+    _dpp_month = dpp_month[i]
+    _d_day = d_day[i]
 
-    _div_year = divyear[i]
-    _div_month = divmonth[i]
-    _p_div_month = next_div_month[i]
-    _2p_div_month = two_next_div_month[i]
+    # Get current month and expiry (maturity) month
+    _c_month = c_month[i]
+    _m_month = m_month[i]
 
-    current_month += 12 * (current_year - _div_year)
-    _m_month += 12 * (current_year - _div_year)
+    if int(_d_year) == int(current_year) or \
+       int(_d_year) == int(current_year) - 1:
 
-    if current_month > _div_month:
-        if _m_month < _p_div_month:
-            numDivs[i] = 0
-
-        elif _m_month >= _p_div_month:
-            if _m_month >= _2p_div_month:
-                numDivs[i] = 2.
-            else:
-                numDivs[i] = 1.
-
-    elif current_month < _div_month:
-        if _m_month < next_div_month[i]:
-            numDivs[i] = 1.
-
-        elif _m_month >= _p_div_month:
-            if _m_month >= _2p_div_month:
-                numDivs[i] = 3.
-            else:
-                numDivs[i] = 2.
-
-    elif current_month == _div_month:
-        if current_day <= divday[i]:
-            if _m_month < next_div_month[i]:
-                numDivs[i] = 1.
-
-            elif _m_month >= _p_div_month:
-                if _m_month >= _2p_div_month:
-                    numDivs[i] = 3.
-                else:
-                    numDivs[i] = 2.
-
-        elif current_day > divday[i]:
-            if _m_month < _p_div_month:
+        if _c_month > _d_month:
+            if _m_month < _dp_month:
                 numDivs[i] = 0
 
-            elif _m_month >= _p_div_month:
-                if _m_month >= _2p_div_month:
+            elif _m_month >= _dp_month:
+                if _m_month >= _dpp_month:
                     numDivs[i] = 2.
                 else:
                     numDivs[i] = 1.
 
-current_month = dt.datetime.now().month
+        elif _c_month < _d_month:
+            if _m_month < _dp_month:
+                numDivs[i] = 1.
+
+            elif _m_month >= _dp_month:
+                if _m_month >= _dpp_month:
+                    numDivs[i] = 3.
+                else:
+                    numDivs[i] = 2.
+
+        elif _c_month == _d_month:
+            if current_day <= _d_day:
+                if _m_month < _dp_month:
+                    numDivs[i] = 1.
+
+                elif _m_month >= _dp_month:
+                    if _m_month >= _dpp_month:
+                        numDivs[i] = 3.
+                    else:
+                        numDivs[i] = 2.
+
+            elif current_day > _d_day:
+                if _m_month < _dp_month:
+                    numDivs[i] = 0
+
+                elif _m_month >= _dp_month:
+                    if _m_month >= _dpp_month:
+                        numDivs[i] = 2.
+                    else:
+                        numDivs[i] = 1.
+
+    else:
+        numDivs[i] = 0
 
 # Set Num divs and remove un-necessary columns
 big.NumDivs = numDivs
@@ -315,6 +345,8 @@ big['AnnRet'] = big.Return * (12. / time_to_mat)
 today = str(str(dt.datetime.now().month) +
             str(dt.datetime.now().day) +
             str(dt.datetime.now().year))
+
+big = big.rename(columns={'Last': 'OptionPrice', 'industry': 'Industry'})
 
 xlsx = '.xlsx'
 csv = '.csv'
