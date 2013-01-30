@@ -325,7 +325,10 @@ big.NumDivs = numDivs
 big = big.drop(['divday', 'divmonth', 'divyear'], axis=1)
 
 # Add dividend income column
-big['DivIncome'] = big.NumDivs * big.DivShare
+# NOTE: we divide DivShare by 4 because yahoo! finance reports annual
+#       divided info and we assume quarterly dividends.
+
+big['DivIncome'] = big.NumDivs * (big.DivShare / 4.)
 
 # Add gain/loss exercise column. This assumes stock price is at strike price
 # at maturity
@@ -336,6 +339,8 @@ big['GLExercise'] = big.Strike - big.StockPrice
 losses = big.GLExercise < 0.0
 only_losses = big.GLExercise * losses
 big['TotalIncome'] = only_losses + big.DivIncome + big.Last
+
+big['CallReturn'] = (only_losses + big.Last) / big.StockPrice
 
 # Calculate the return over the life of the play and annual return
 big['Return'] = big.TotalIncome / big.StockPrice
