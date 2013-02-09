@@ -19,7 +19,8 @@ def _parse_options_data(table):
     rows = table.findall('.//tr')
     header = _unpack(rows[0], kind='th')
     data = [_unpack(r) for r in rows[1:]]
-    return TextParser(data, names=header).get_chunk()
+    return TextParser(data, names=header, na_values=['N/A'],
+                      thousands=',').get_chunk()
 
 
 class Options(object):
