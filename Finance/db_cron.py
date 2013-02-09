@@ -60,7 +60,7 @@ c_month = months[now.month]  # Get current month
 c_day = str(now.day)  # Get current day
 c_year = str(now.year)  # Get current year
 
-f = h5.File('/Volumes/Secondary HD/options_db.h5')  # open database file
+f = h5.File('/Volumes/Secondary HD/options_db.h5') # open database file
 year = f.require_group(c_year)  # Make hdf5 group for year
 month = year.require_group(c_month)  # Make hdf5 group for month
 day = month.require_group(c_day)  # Make hdf5 group for day
@@ -114,6 +114,9 @@ for i in tickers:
     # status update
     num += 1
     if num % 25 == 0:
+        f.close()
         print "just finished %s of %s" % (str(num), str(num_ticks))
+        f = h5.File('/Volumes/Secondary HD/options_db.h5')
+
 
 f.close()  # Close file
