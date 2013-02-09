@@ -212,7 +212,7 @@ big = big.join(opts)
 
 # NOTE: Save/read big to/from csv. This is necessary because from_csv has good
 # N/A handling that I don't want to worry about doing by myself.
-name = 'big_after_opt_join' + eend + '.csv'
+name = 'tempbig.csv'
 big.to_csv(name)
 big = pd.DataFrame.from_csv(name)
 
@@ -346,6 +346,10 @@ big['CallReturn'] = (only_losses + big.Last) / big.StockPrice
 big['Return'] = big.TotalIncome / big.StockPrice
 time_to_mat = mat_month - current_month
 big['AnnRet'] = big.Return * (12. / time_to_mat)
+
+# If time_to_mat[i] = 0. AnnRet[i] = inf
+# We don't want this, we just want Return to be non-compounding
+big.AnnRet[np.isinf(big.AnnRet)] = big.Return[np.isinf(big.AnnRet)]
 
 today = str(str(dt.datetime.now().month) +
             str(dt.datetime.now().day) +
