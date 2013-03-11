@@ -57,10 +57,12 @@ months = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun',
 
 now = dt.datetime.now()  # Get current time
 c_month = months[now.month]  # Get current month
-c_day = str(now.day)  # Get current day
+c_day = str(now.day - 1)  # Get current day
 c_year = str(now.year)  # Get current year
 
-f = h5.File('/Volumes/Secondary HD/options_db.h5') # open database file
+h5_filename = c_month + '-' + c_day + '-' + c_year + '.h5'
+
+f = h5.File('/Volumes/Secondary HD/options/' + h5_filename) # open database file
 year = f.require_group(c_year)  # Make hdf5 group for year
 month = year.require_group(c_month)  # Make hdf5 group for month
 day = month.require_group(c_day)  # Make hdf5 group for day
@@ -91,6 +93,7 @@ for i in tickers:
                                                i_calls.shape, float)
                 call_ds[...] = i_calls.astype(np.float32)  # Populate dataset
         except:  # If it doesn't work just pass
+            print 'Failed for calls on ticker %s' % (tick)
             pass
 
     if raw_puts.values.any():  # Check if any puts were returned
@@ -109,14 +112,13 @@ for i in tickers:
                                               i_puts.shape, float)
                 put_ds[...] = i_puts.astype(np.float32)
         except:
+            print 'Failed for puts on ticker %s' % (tick)
             pass
 
     # status update
     num += 1
     if num % 25 == 0:
-        f.close()
         print "just finished %s of %s" % (str(num), str(num_ticks))
-        f = h5.File('/Volumes/Secondary HD/options_db.h5')
 
 
 f.close()  # Close file

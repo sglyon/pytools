@@ -78,9 +78,9 @@ def prep_frame(market):
 
     frame.index = df.Symbol
 
-    frame.sort_index(inplace=1)
+    ret_frame = frame.sort_index()
 
-    return frame
+    return ret_frame
 
 
 def equity_data(x):
@@ -185,8 +185,8 @@ def fill_option_data(frame):
 nas = prep_frame('nasdaq')
 nyse = prep_frame('nyse')
 
-big = pd.concat([nyse, nas])
-big.sort_index(inplace=1)
+raw_big = pd.concat([nyse, nas])
+big = raw_big.sort_index()
 
 industries = big.industry
 sectors = big.Sector
