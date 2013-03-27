@@ -1,0 +1,7 @@
+Sublime text package ideas:
+  ☐ Unite TODOcontrol and plaintasks
+    ☐ I would have search current projects for all TODO, NOTE, ect. and then compile a file like this where headings are file name (abs paths)
+    ☐ When archiving I would add a tag that keeps track of which file each item came from (just name, not path)
+
+Other:
+  ☐ Clip to Evernote the sublime python API files.
