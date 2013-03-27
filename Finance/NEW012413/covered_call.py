@@ -19,7 +19,8 @@ from __future__ import division
 import numpy as np
 import pandas as pd
 from pandas.io.parsers import ExcelWriter
-from pandas.io.data import Options, get_data_yahoo, _parse_options_data
+from pandas.io.data import get_data_yahoo
+from options import Options, _parse_options_data
 from yahooStocks import StockInfo
 from dateutil import parser
 import datetime as dt
@@ -122,10 +123,10 @@ def equity_data(x):
         price = np.nan
         monthly_volatilty = np.nan
 
-    x['exdivdate'] = str(str(month) + '-' + str(day) + '-' + str(year))
-    x['divmonth'] = month
-    x['divday'] = day
-    x['divyear'] = year
+    x['ExDivDate'] = str(str(month) + '-' + str(day) + '-' + str(year))
+    x['DivMonth'] = month
+    x['DivDay'] = day
+    x['DivYear'] = year
     x['StockPrice'] = price
     x['DivShare'] = div_share
     x['Volatility'] = monthly_volatilty
@@ -182,31 +183,43 @@ def fill_option_data(frame):
 
     return out
 
+
+def days_to_expiry(x):
+    exp = x['Expiry']
+    x['DaysToExpiry'] = (pd.to_datetime(exp) - now).days
+    return x
+
 nas = prep_frame('nasdaq')
 nyse = prep_frame('nyse')
 
 raw_big = pd.concat([nyse, nas])
+
 big = raw_big.sort_index()
 
-industries = big.industry
-sectors = big.Sector
-tickers = big.index
-names = big.Name
-market_caps = big.MarketCap
+# ADDED on 3/20/13 to do only precious metals and metal fabrications industries
+precious = big[big.industry == 'Precious Metals'].index.unique()
+fabrications = big[big.industry == 'Metal Fabrications'].index.unique()
+both = np.concatenate([precious, fabrications])
 
-num_tickers = tickers.size
+big = big.ix[both]
 
-big['exdivdate'] = np.nan
-big['divmonth'] = np.nan
-big['divday'] = np.nan
-big['divyear'] = np.nan
+num_tickers = big.index.size
+
+big['ExDivDate'] = np.nan
+big['DivMonth'] = np.nan
+big['DivDay'] = np.nan
+big['DivYear'] = np.nan
 big['StockPrice'] = np.nan
 big['DivShare'] = np.nan
 big['Volatility'] = np.nan
 
+print('About to gather Equitiy Data \n\n\n')
 big = big.apply(equity_data, axis=1)
+print('Finished to gathering Equitiy Data \n\n\n')
 
+print('About to gather Options Data \n\n\n')
 opts = fill_option_data(big)
+print('Finished to gathering Options Data \n\n\n')
 
 big = big.join(opts)
 
@@ -216,18 +229,15 @@ name = 'tempbig.csv'
 big.to_csv(name)
 big = pd.DataFrame.from_csv(name)
 
-# Replace strings 'N/A' in big.Last with np.nan
-big.Last = big.Last.replace('N/A', np.nan).astype(float)
-
 # Drop columns that aren't meaningful
 big = big.dropna()
 
 # Get ex dividend dates
-divday = big.divday
-divmonth = big.divmonth
-divyear = big.divyear
-next_div_month = divmonth + 3
-two_next_div_month = divmonth + 6
+DivDay = big.DivDay
+DivMonth = big.DivMonth
+DivYear = big.DivYear
+next_div_month = DivMonth + 3
+two_next_div_month = DivMonth + 6
 
 # Prepare comparison dates
 current_day = dt.datetime.now().day
@@ -236,7 +246,7 @@ current_year = dt.datetime.now().year
 
 # Create column for num divs
 big['NumDivs'] = 0
-numDivs = np.zeros(divmonth.size)
+numDivs = np.zeros(DivMonth.size)
 
 # Get option expiry data
 mat_month = big.Expiry.str[:2].astype(float)
@@ -247,23 +257,23 @@ m_day = big.Expiry.str.split('-').str.get(1).astype(float)
 
 # Array of relative current months
 c_month = np.ones(big.shape[0]) * current_month
-c_month += 12 * (current_year - divyear)
+c_month += 12 * (current_year - DivYear)
 
 # Array of relative expiry months
-m_month += 12 * (current_year - divyear)
+m_month += 12 * (current_year - DivYear)
 
 # Array of relative ex-div months (last dividend and next two)
-d_month = divmonth + 12 * (current_year - divyear)
+d_month = DivMonth + 12 * (current_year - DivYear)
 dp_month = d_month + 3
 dpp_month = d_month + 6
 
 # Array of ex-div days
-d_day = divday
+d_day = DivDay
 
 # Loop over all expirations and get num divs
-for i in range(divmonth.size):
+for i in range(DivMonth.size):
     # Get dividend items
-    _d_year = divyear[i]
+    _d_year = DivYear[i]
     _d_month = d_month[i]
     _dp_month = dp_month[i]
     _dpp_month = dpp_month[i]
@@ -322,7 +332,7 @@ for i in range(divmonth.size):
 
 # Set Num divs and remove un-necessary columns
 big.NumDivs = numDivs
-big = big.drop(['divday', 'divmonth', 'divyear'], axis=1)
+big = big.drop(['DivDay', 'DivMonth', 'DivYear'], axis=1)
 
 # Add dividend income column
 # NOTE: we divide DivShare by 4 because yahoo! finance reports annual
@@ -330,41 +340,66 @@ big = big.drop(['divday', 'divmonth', 'divyear'], axis=1)
 
 big['DivIncome'] = big.NumDivs * (big.DivShare / 4.)
 
+big['DivReturn'] = big.DivIncome / big.StockPrice
+
 # Add gain/loss exercise column. This assumes stock price is at strike price
 # at maturity
-big['GLExercise'] = big.Strike - big.StockPrice
-
-# Calculate total income, only include losses in movement of stock price
-# when it matures at the strike price
-losses = big.GLExercise < 0.0
-only_losses = big.GLExercise * losses
-big['TotalIncome'] = only_losses + big.DivIncome + big.Last
-
-big['CallReturn'] = (only_losses + big.Last) / big.StockPrice
+big['CapitalGL'] = (big.Strike - big.StockPrice)
 
 # Calculate the return over the life of the play and annual return
-big['Return'] = big.TotalIncome / big.StockPrice
-time_to_mat = mat_month - current_month
-big['AnnRet'] = big.Return * (12. / time_to_mat)
+big['StaticRet'] = (big.DivIncome + big.Last) / big.StockPrice
+big['CapitalRet'] = (big.DivIncome + big.Last + big.CapitalGL) / \
+                        big.StockPrice
+
+big['DaysToExpiry'] = np.nan
+big = big.apply(days_to_expiry, axis=1)
+
+big['AnnStaticRet'] = big.StaticRet * (365. / big.DaysToExpiry)
+big['AnnCapitalRet'] = big.CapitalRet * (365. / big.DaysToExpiry)
+big = big.drop('DaysToExpiry', axis=1)
 
 # If time_to_mat[i] = 0. AnnRet[i] = inf
-# We don't want this, we just want Return to be non-compounding
-big.AnnRet[np.isinf(big.AnnRet)] = big.Return[np.isinf(big.AnnRet)]
+# We don't want this, we just want AnnReturn to be 12 * return. This is
+# because we can expect to get this every month and we can do it this month.
 
-today = str(str(dt.datetime.now().month) +
-            str(dt.datetime.now().day) +
-            str(dt.datetime.now().year))
+# TODO: This is an ugly/temporary fix. I can do better...
+# new_ind = big.reset_index()
+# bad_stat_ind = new_ind[np.isinf(big.AnnStaticRet)].index
+# bad_cap_ind = new_ind[np.isinf(big.AnnCapitalRet)].index
+# new_ind.ix[bad_stat_ind, 'AnnStaticRet'] = new_ind.ix[bad_stat_ind, 'StaticReturn'] * 12
+# new_ind.ix[bad_cap_ind, 'AnnCapitalRet'] = new_ind.ix[bad_cap_ind, 'CapitalReturn'] * 12
+# big = big.drop('AnnStaticRet', 1)
+# big = big.drop('AnnCapitalRet', 1)
+# big['AnnStaticRet'] = new_ind.AnnStaticRet.values
+# big['AnnCapitalRet'] = new_ind.AnnCapitalRet.values
+
+now = dt.datetime.now()
+month = now.month
+year = now.year
+day = now.day
+
+today_str = str(str(month) + str(day) + str(year))
 
 big = big.rename(columns={'Last': 'OptionPrice', 'industry': 'Industry'})
 
 xlsx = '.xlsx'
 csv = '.csv'
-file_name = 'All_covered_call' + today
+file_name = 'All_covered_call' + today_str
+
+sectors = big.Sector.unique().astype(str)
 
 name_xl = file_name + xlsx
-name_cs = file_name + csv
 writer = ExcelWriter(name_xl)
-big.to_excel(writer, sheet_name='Covered Call')
+big.to_excel(writer, sheet_name='All Sectors')
+summary = big.groupby(['Sector', 'Industry']).mean()
+summary.to_excel(writer, sheet_name='Sector Summary')
+
+for i in sectors:
+    to_save = big[big.Sector == i]
+    name = i.replace('/', '-')
+    to_save.to_excel(writer, sheet_name=name)
+
 writer.save()
 
+name_cs = file_name + csv
 big.to_csv(name_cs)
