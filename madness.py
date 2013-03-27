@@ -5,6 +5,8 @@ Author: Spencer Lyon
 
 File to gather/examine college basketball data for march madness
 
+NOTE: Check out sagarin model.
+
 Playing style
 -------------
 offense (do these items per point to get relative weights)
@@ -50,7 +52,7 @@ from pandas.io.parsers import TextParser
 from lxml.html import parse
 
 # Show wider columns!
-pd.set_option('line_width', 180)
+pd.set_option('line_width' , 180)
 
 
 class Team(object):
