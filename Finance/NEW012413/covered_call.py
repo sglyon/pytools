@@ -28,11 +28,12 @@ import urllib
 from lxml.html import parse
 import urllib2
 
-pd.set_option('line', 200)
+pd.set_option('line_width', 200)
 
 # Define how many months to go out
 plus = 6
 
+# Get current day
 now = dt.datetime.now()
 month = now.month
 year = now.year
@@ -194,14 +195,8 @@ nyse = prep_frame('nyse')
 
 raw_big = pd.concat([nyse, nas])
 
+# Contains one line per ticker
 big = raw_big.sort_index()
-
-# ADDED on 3/20/13 to do only precious metals and metal fabrications industries
-precious = big[big.industry == 'Precious Metals'].index.unique()
-fabrications = big[big.industry == 'Metal Fabrications'].index.unique()
-both = np.concatenate([precious, fabrications])
-
-big = big.ix[both]
 
 num_tickers = big.index.size
 
@@ -223,7 +218,7 @@ print('Finished to gathering Options Data \n\n\n')
 
 big = big.join(opts)
 
-# NOTE: Save/read big to/from csv. This is necessary because from_csv has good
+# NOTE: Save/read big to/from csv. This is done because from_csv has good
 # N/A handling that I don't want to worry about doing by myself.
 name = 'tempbig.csv'
 big.to_csv(name)
@@ -372,11 +367,6 @@ big = big.drop('DaysToExpiry', axis=1)
 # big = big.drop('AnnCapitalRet', 1)
 # big['AnnStaticRet'] = new_ind.AnnStaticRet.values
 # big['AnnCapitalRet'] = new_ind.AnnCapitalRet.values
-
-now = dt.datetime.now()
-month = now.month
-year = now.year
-day = now.day
 
 today_str = str(str(month) + str(day) + str(year))
 
