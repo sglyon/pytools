@@ -21,6 +21,7 @@ from dateutil import parser
 import datetime as dt
 import urllib
 import urllib2
+from time import time
 import numpy as np
 import pandas as pd
 from pandas.io.parsers import ExcelWriter
@@ -29,7 +30,7 @@ from options import Options, _parse_options_data
 from yahooStocks import StockInfo
 from lxml.html import parse
 from mpi4py import MPI
-from byumcl.partools.partools import gatv_scatv_tuples, rprint, par_print
+from byumcl.partools.partools import gatv_scatv_tuples, par_print, rprint
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()  # Which process we are on
@@ -206,6 +207,7 @@ def days_to_expiry(x):
     return x
 
 if rank == 0:
+    start_time = time()
     nas = prep_frame('nasdaq')
     nyse = prep_frame('nyse')
 
@@ -241,17 +243,25 @@ my_end = int(locs[rank + 1])
 
 my_chunk = big.ix[my_start:my_end]
 
-par_print(comm, 'About to gather Equitiy Data \n')
-my_chunk = my_chunk.apply(equity_data, axis=1)
-par_print(comm, 'Finished to gathering Equitiy Data \n')
+first_tick = str(my_chunk.index[0])
+last_tick = str(my_chunk.index[-1])
+msg = 'About to gather %s data for tickers %s to %s'
 
-par_print(comm, 'About to gather Options Data \n')
+par_print(comm, msg % ('Equity', first_tick, last_tick))
+my_chunk = my_chunk.apply(equity_data, axis=1)
+par_print(comm, 'Finished to gathering Equity Data')
+
+if rank == 0:
+    print('\n\nTotal time after equity %.4f\n\n' % (time() - start_time))
+
+par_print(comm, msg % ('Options', first_tick, last_tick))
 my_opts = fill_option_data(my_chunk)
-par_print(comm, 'Finished to gathering Options Data \n')
+par_print(comm, 'Finished to gathering Options Data')
+
+if rank == 0:
+    print('\n\nTotal time after options %.4f\n\n' % (time() - start_time))
 
 my_chunk = my_chunk.join(my_opts)
-
-my_chunk = my_chunk.reset_index()
 
 # --------------------------- Gather it back in ---------------------------- #
 # NOTE: I am cheating here. Instead of letting Gatherv do the pickling for me
@@ -275,7 +285,7 @@ if rank == 0:
 
     # NOTE: Save/read big to/from csv. This is done because from_csv has good
     # N/A handling that I don't want to worry about doing by myself.
-    temp_name = 'tempbig%s.csv' % (eend)
+    temp_name = 'tempbig%s.csv' % (eend.replace('/', '_'))
     tempbig.to_csv(temp_name)
     big = pd.DataFrame.from_csv(temp_name)
 
@@ -448,3 +458,8 @@ if rank == 0:
 
     name_cs = file_name + csv
     big.to_csv(name_cs)
+
+    total_time = time() - start_time
+    mins = int(total_time // 60)
+    secs = total_time - (60 * mins)
+    print('Total Execution time %i minutes and %.2f seconds' % (mins, secs))
