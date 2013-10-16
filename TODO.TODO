@@ -5,3 +5,15 @@ Sublime text package ideas:
 
 Other:
   ☐ Clip to Evernote the sublime python API files.
+  ☐ Also clip the pyside tutorial stuffs
+
+Finance:
+  ☐ Update lxml on laptop
+  ☐ See if there is a common trading platform (etrade, ...) I could wrap an API around to execute trades
+  ☐ Test the parallel_cc.py file on my machine and also on mary_lou. If it works that will be awesome.
+    ☐ I might have to install lxml locally. Everything else should be there already.
+
+
+＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+Archive:
+ ✔ Parallelize covered_call.py @done (13-03-29 15:01)
