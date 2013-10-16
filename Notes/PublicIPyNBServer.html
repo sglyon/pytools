@@ -1,0 +1,739 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+    /*DOCUMENTATION ************************************************
+    * This document was generated with Pandoc, using a minimally   *
+    * modified version of Brett Terpstra's "GitHub" stylesheet,    *
+    * as included in Marked.app (http://markedapp.com), copyright  *
+    * 2011 Brett Terpstra and used, gratefully, with permission.   *
+    * Please leave this notice intact when building or distributing*
+    * your HTML. Brett's kindness in allowing his work to be reused*
+    * and redistributed is deeply appreciated.    (DPS, 2012-12-06)*
+    ***************************************************************/
+-->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <meta name="generator" content="pandoc">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<style>
+html, body {
+    color: black;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font: 13.34px helvetica,arial,freesans,clean,sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.4;
+    padding: 3px;
+    background: #fff;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+}
+
+p {
+    margin: 1em 0;
+}
+
+a {
+    color: #4183c4;
+    text-decoration: none;
+}
+
+em em {
+    font-style: normal;
+}
+
+#wrapper {
+    background-color: #fff;
+    border: 3px solid #eee !important;
+    padding: 0 30px;
+    /*margin: 15px;*/
+    max-width: 700px;
+    margin: 15px auto;
+}
+
+#wrapper {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+#wrapper>*:first-child {
+    margin-top: 0!important;
+}
+
+#wrapper>*:last-child {
+    margin-bottom: 0!important;
+}
+
+h1,h2,h3,h4,h5,h6 {
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    margin: 15px 0;
+    padding-bottom: 2px;
+    font-size: 24px;
+    border-bottom: 1px solid #eee;
+}
+
+h2 {
+    margin: 20px 0 10px 0;
+    font-size: 18px;
+}
+
+h3 {
+    margin: 20px 0 10px 0;
+    padding-bottom: 2px;
+    font-size: 14px;
+    border-bottom: 1px solid #ddd;
+}
+
+h4 {
+    font-size: 14px;
+    line-height: 26px;
+    padding: 18px 0 4px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+h5 {
+    font-size: 13px;
+    line-height: 26px;
+    padding: 14px 0 0;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+h6 {
+    color: #666;
+    font-size: 14px;
+    line-height: 26px;
+    padding: 18px 0 0;
+    font-weight: normal;
+    font-variant: italic;
+}
+
+hr {
+    background: transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAECAYAAACtBE5DAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OENDRjNBN0E2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OENDRjNBN0I2NTZBMTFFMEI3QjRBODM4NzJDMjlGNDgiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4Q0NGM0E3ODY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4Q0NGM0E3OTY1NkExMUUwQjdCNEE4Mzg3MkMyOUY0OCIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PqqezsUAAAAfSURBVHjaYmRABcYwBiM2QSA4y4hNEKYDQxAEAAIMAHNGAzhkPOlYAAAAAElFTkSuQmCC) repeat-x 0 0;border: 0 none;
+    color: #ccc;
+    height: 4px;
+    margin: 20px 0;
+    padding: 0;
+}
+
+#wrapper>h2:first-child,#wrapper>h1:first-child,#wrapper>h1:first-child+h2 {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+#wrapper>h3:first-child,#wrapper>h4:first-child,#wrapper>h5:first-child,#wrapper>h6:first-child {
+    margin: 0;
+    padding: 0;
+}
+
+h4+p,h5+p,h6+p {
+    margin-top: 0;
+}
+
+li p.first {
+    display: inline-block;
+}
+
+ul,ol {
+    margin: 15px 0 15px 25px;
+}
+
+ul li,ol li {
+    margin-top: 7px;
+    margin-bottom: 7px;
+}
+
+ul li>*:last-child,ol li>*:last-child {
+    margin-bottom: 0;
+}
+
+ul li>*:first-child,ol li>*:first-child {
+    margin-top: 0;
+}
+
+#wrapper>ul,#wrapper>ol {
+    margin-top: 21px;
+    margin-left: 36px;
+}
+
+dl {
+    margin: 0;
+    padding: 10px 1em 10px;
+}
+
+dl dt {
+    font-size: 14px;
+    font-weight: bold;
+    line-height: normal;
+    margin: 0;
+    padding: 5px 0 5px;
+}
+
+dl dd {
+    font-size: 13px;
+    margin: 0;
+    padding: 0px 1em 0;
+}
+
+blockquote {
+    margin: 14px 0;
+    border-left: 4px solid #ddd;
+    padding-left: 11px;
+    color: #555;
+}
+
+tbody {
+    display: table-row-group;
+}
+
+tfoot {
+    display: table-footer-group;
+}
+
+table {
+    margin-bottom: 2em;
+    padding: 0;
+    font-size: 14px;
+    border-collapse: collapse;
+
+    -webkit-box-shadow: 1px 1px 2px rgba(0, 0, 0, .35);
+    -moz-box-shadow: 1px 1px 2px rgba(0, 0, 0, .35);
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, .35);
+    width: 70%;
+    margin: 0 auto 2em auto;
+}
+
+table th,table td {
+    padding: 10px 10px 9px;
+    line-height: 18px;
+    text-align: left;
+}
+
+table th {
+    padding-top: 9px;
+    font-family: LeagueGothic;
+    font-size: 18px;
+    font-weight: normal !important;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+table td {
+    vertical-align: top;
+    border-top: 1px solid #ddd;
+    font-family: fjord,georgia,serif;
+    font-size: 14px !important;
+}
+
+table tbody th {
+    border-top: 1px solid #ddd;
+    vertical-align: top;
+}
+
+table {
+    border: 1px solid #ddd;
+    border-collapse: separate;
+    *border-collapse: collapse; /* IE7, collapse table to remove spacing */
+
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+table th + th,table td + td,table th + td {
+    border-left: 1px solid #ddd;
+}
+
+table thead tr:first-child th:first-child,table tbody tr:first-child td:first-child {
+    -webkit-border-radius: 4px 0 0 0;
+    -moz-border-radius: 4px 0 0 0;
+    border-radius: 4px 0 0 0;
+}
+
+table thead tr:first-child th:last-child,table tbody tr:first-child td:last-child {
+    -webkit-border-radius: 0 4px 0 0;
+    -moz-border-radius: 0 4px 0 0;
+    border-radius: 0 4px 0 0;
+}
+
+table tbody tr:last-child td:first-child {
+    -webkit-border-radius: 0 0 0 4px;
+    -moz-border-radius: 0 0 0 4px;
+    border-radius: 0 0 0 4px;
+}
+
+table tbody tr:last-child td:last-child {
+    -webkit-border-radius: 0 0 4px 0;
+    -moz-border-radius: 0 0 4px 0;
+    border-radius: 0 0 4px 0;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: rgba(0,0,0,0.03);
+}
+
+img {
+    max-width: 100%;
+    height: auto
+}
+
+p code, p tt {
+    margin: 0 2px;
+    padding: 2px 5px;
+    white-space: nowrap;
+    border: 1px solid #ccc;
+    background-color: #f8f8f8;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    font-size: 12px
+}
+
+pre>code {
+    margin: 0;
+    padding: 0;
+    white-space: pre;
+    border: none;
+    background: transparent;
+    font-size: 13px
+}
+
+#wrapper>pre {
+    background-color: #f8f8f8;
+    border: 1px solid #ccc;
+    font-size: 13px;
+    line-height: 19px;
+    overflow: auto;
+    padding: 6px 10px;
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+}
+
+
+#wrapper>pre,#wrapper>div.highlight {
+    margin: 10px 0 0;
+}
+
+pre code,pre tt {
+    background-color: transparent;
+    border: none;
+}
+
+#wrapper {
+    background-color: #fff;
+    border: 1px solid #CACACA;
+    padding: 30px;
+}
+
+pre.poetry {
+    font-family: Georgia, Garamond, serif !important;
+    font-style: italic;
+    font-size: 110% !important;
+    line-height: 1.6em;
+    display: block;
+    margin-left: 1em;
+}
+
+pre.poetry code {
+    font-family: Georgia, Garamond, serif !important;
+    word-break: break-all;
+    word-break: break-word; /* Non standard for webkit */
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    hyphens: auto;
+    white-space: pre-wrap;
+}
+
+sup,sub,a.footnote {
+    font-size: 1.4ex;
+    height: 0;
+    line-height: 1;
+    vertical-align: super;
+    position: relative;
+}
+
+sub {
+    vertical-align: sub;
+    top: -1px;
+}
+
+@media print {
+    body {
+        background: #fff;
+    }
+
+    img, pre, blockquote, table, figure {
+        page-break-inside: avoid
+    }
+
+    #wrapper {
+        background: #fff;
+        border: none;
+    }
+
+    code {
+        background-color: #fff;
+        color: #444!important;
+        padding: 0 .2em;
+        border: 1px solid #DEDEDE;
+    }
+
+    pre code {
+        background-color: #fff!important;
+        overflow: visible;
+    }
+
+    pre {
+        background: #fff;
+    }
+}
+
+@media screen {
+
+    ::selection {
+        background: rgba(157, 193, 200,.5)
+    }
+
+    h1::selection {
+        background-color: rgba(45, 156, 208, .3)
+    }
+
+    h2::selection {
+        background-color: rgba(90, 182, 224, .3)
+    }
+
+    h3::selection,
+    h4::selection,
+    h5::selection,
+    h6::selection,li::selection,ol::selection {
+        background-color: rgba(133, 201, 232, .3)
+    }
+
+    code::selection {
+        background-color: rgba(0,0,0,.7);
+        color: #eee
+    }
+
+    code span::selection {
+        background-color: rgba(0,0,0,.7) !important;
+        color: #eee !important
+    }
+
+    a::selection {
+        background-color: rgba(255, 230, 102,.2)
+    }
+
+    td::selection,th::selection,caption::selection {
+        background-color: rgba(180, 237, 95, .5);
+    }
+}
+
+em em {
+    font-style: normal;
+}
+
+#criticnav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    box-shadow: 0 1px 1px 1px #777;
+    margin: 0;
+    padding: 0;
+    background-color: white;
+    font-size: 12px;
+}
+
+#criticnav ul {
+    list-style-type: none;
+    width: 90%;
+    margin: 0 auto;
+    padding: 0;
+}
+
+#criticnav ul li {
+    display: block;
+    width: 33%;
+    text-align: center;
+    padding: 10px 0 5px!important;
+    margin: 0 !important;
+    line-height: 1em;
+    float: left;
+    border-left: 1px solid #ccc;
+    text-transform: uppercase;
+}
+
+#criticnav ul li:before {
+    content: none !important;
+}
+
+#criticnav ul li#edited-button {
+    border-right: 1px solid #ccc;
+}
+
+#criticnav ul li.active {
+    background-image: -webkit-linear-gradient(top, white, #cccccc)
+}
+
+.original del {
+    
+        text-decoration: none;
+}   
+
+.original ins,
+.original span.popover,
+.original ins.break {
+    display: none;
+}
+
+.edited ins {
+    
+        text-decoration: none;
+}   
+
+.edited del,
+.edited span.popover,
+.edited ins.break {
+    display: none;
+}
+
+.original mark,
+.edited mark {
+    background-color: transparent;
+}
+
+.markup mark {
+    background-color: #fffd38;
+    text-decoration: none;
+}
+
+.markup del {
+    background-color: #f6a9a9;
+    text-decoration: none;
+}
+
+.markup ins {
+    background-color: #a9f6a9;
+    text-decoration: none;
+}
+
+.markup ins.break {
+    display: block;
+    line-height: 2px;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.markup ins.break span {
+    line-height: 1.5em;
+}
+
+.markup .popover {
+    background-color: #4444ff;
+    color: #fff;
+}
+
+.markup .popover .critic.comment {
+    display: none;
+}
+
+.markup .popover:hover span.critic.comment {
+    display: block;
+    position: absolute;
+    width: 200px;
+    left: 30%;
+    font-size: 0.8em; 
+    color: #ccc;
+    background-color: #333;
+    z-index: 10;
+    padding: 0.5em 1em;
+    border-radius: 0.5em;
+}
+</style>
+
+    <style type="text/css">
+    table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+      margin: 0; padding: 0; vertical-align: baseline; border: none; }
+    table.sourceCode { width: 100%; line-height: 100%; }
+    td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+    td.sourceCode { padding-left: 5px; }
+    code > span.kw { color: #007020; font-weight: bold; }
+    code > span.dt { color: #902000; }
+    code > span.dv { color: #40a070; }
+    code > span.bn { color: #40a070; }
+    code > span.fl { color: #40a070; }
+    code > span.ch { color: #4070a0; }
+    code > span.st { color: #4070a0; }
+    code > span.co { color: #60a0b0; font-style: italic; }
+    code > span.ot { color: #007020; }
+    code > span.al { color: #ff0000; font-weight: bold; }
+    code > span.fu { color: #06287e; }
+    code > span.er { color: #ff0000; font-weight: bold; }
+    </style>
+
+
+
+
+
+</head>
+
+<body class="normal">
+    <div id="wrapper">
+
+<h1 id="setting-up-a-public-notebook-server"><a href="#setting-up-a-public-notebook-server">Setting up a public notebook server</a></h1>
+<p>Much of the material here is adapted from the <a href="http://ipython.org/ipython-doc/dev/interactive/public_server.html">Running a notebook server</a> page of the ipython documentation.</p>
+<p>Steps:</p>
+<ol style="list-style-type: decimal">
+<li>Inside IPython, run the following (obviously replacing the string <code>ENTERpasswordHERE</code>)</li>
+</ol>
+<pre class="sourceCode python"><code class="sourceCode python"><span class="ch">from</span> IPython.lib <span class="ch">import</span> passwd
+<span class="kw">print</span>(passwd(<span class="st">&#39;ENTERpasswordHERE&#39;</span>))</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Copy the text printed out, you will use it later.</li>
+<li>Create a new ipython profile. I wanted to name the profile nbssl and I used the command <code>ipython profile create nbssl</code>.</li>
+<li>Within the new profile directory, edit the file <code>ipython_notebook_config.py</code>. For me this file was in <code>~/.ipython/profile_nbssl/ipython_notebook_config.py</code>. Search for and update/un-comment the following line (keep the file open, as we will be changing more of it as we go):</li>
+</ol>
+<pre class="sourceCode python"><code class="sourceCode python">c.NotebookApp.password = <span class="st">u&#39;LONGhashFROMstep2&#39;</span></code></pre>
+<ol start="5" style="list-style-type: decimal">
+<li>Create a self-signed ssl certificate (this will produce a warning, but getting an officially signed one is a non-trivial endeavor). To do this <code>cd</code> to the ipython profile directory from above and run the following</li>
+</ol>
+<pre class="sh"><code>openssl req -x509 -nodes -days 365 -newkey rsa:1024 -keyout mycert.key -out mycert.crt</code></pre>
+<ol start="6" style="list-style-type: decimal">
+<li>Update the <code>ipython_notebook_config.py</code> file again to specify the location of the certification and the key file. For me this meant updating the following lines to look like this:</li>
+</ol>
+<pre class="sourceCode python"><code class="sourceCode python"><span class="co"># The full path to an SSL/TLS certificate file.</span>
+c.NotebookApp.certfile = <span class="st">u&#39;/Users/sglyon/.ipython/profile_nbssl/mycert.crt&#39;</span>
+
+<span class="co"># The full path to a private key file for usage with SSL/TLS.</span>
+c.NotebookApp.keyfile = <span class="st">u&#39;/Users/sglyon/.ipython/profile_nbssl/mycert.key&#39;</span></code></pre>
+<ol start="7" style="list-style-type: decimal">
+<li>Make the notebook public by telling the server to listen on all ip addresses by editing the following line in the <code>ipython_notebook_config.py</code> file:</li>
+</ol>
+<pre class="sourceCode python"><code class="sourceCode python">c.NotebookApp.ip = <span class="st">&#39;*&#39;</span></code></pre>
+<ol start="8" style="list-style-type: decimal">
+<li>(OPTIONAL) Give the notebook a static, specified port to run on. I changed the following line in the <code>ipython_notebook_config.py</code> file:</li>
+</ol>
+<pre class="sourceCode python"><code class="sourceCode python">c.NotebookApp.port = <span class="dv">9999</span></code></pre>
+<ol start="9" style="list-style-type: decimal">
+<li>(OPTIONAL) Have the notebook server start without pulling up the browser by changing the following line:</li>
+</ol>
+<pre class="sourceCode python"><code class="sourceCode python">c.NotebookApp.open_browser = <span class="ot">False</span></code></pre>
+<ol start="10" style="list-style-type: decimal">
+<li>(OPTIONAL) If you would like to access this notebook server from outside your local network you need to do the following two steps. Configure your computer’s internal network settings so it has a static local IP address. I chose <code>10.0.1.222</code> for my server.</li>
+<li>(OPTIONAL) Configure your router to forward the port from step 8 (mine was <code>9999</code>) to the static IP from step 10 (mine was <code>10.0.1.222</code>). This will ensure that you can access the server remotely, from behind the router.</li>
+<li>(OPTIONAL) Specify a custom directory for the server notebooks to be stored by editing the following line of <code>ipython_notebook_config.py</code> (note that I have included the example directory I chose: <code>/Users/sglyon/serverNotebooks</code>):</li>
+</ol>
+<pre class="sourceCode python"><code class="sourceCode python"><span class="co"># The directory to use for notebooks.</span>
+c.NotebookManager.notebook_dir = <span class="st">u&#39;/Users/sglyon/serverNotebooks&#39;</span></code></pre>
+<p>After all that setup, you simply need to run the following to start the server:</p>
+<pre class="sh"><code>ipython notebook --profile=nbssl</code></pre>
+<h2 id="accessing-from-a-remote-computer"><a href="#accessing-from-a-remote-computer">Accessing from a remote computer</a></h2>
+<p>If you would like to access from a remote computer (one not on your same wifi network or the equivalent), you need to have opened up the ports in steps 8 and 11 <em>and</em> you need to know the public IP address for your network (this is different from the local IP address assigned to your computer in step 10). You can do this using a website like <a href="http://www.whatsmyip.org/">whatsmyip.org</a>, or using the following python script.</p>
+<pre class="sourceCode python"><code class="sourceCode python"><span class="ch">import</span> urllib
+<span class="ch">import</span> re
+
+
+<span class="kw">def</span> fetch_ext_ip():
+    <span class="co">&quot;Fetches and returns external IP address&quot;</span>
+    request = urllib.urlopen(<span class="st">&quot;http://checkip.dyndns.org&quot;</span>).read()
+
+    <span class="kw">return</span> re.findall(<span class="st">r&quot;\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3}&quot;</span>, request)[<span class="dv">0</span>]
+
+<span class="kw">print</span>(<span class="st">&quot;your IP Address is: </span><span class="ot">%s</span><span class="st">&quot;</span> %  fetch_ext_ip())</code></pre>
+<p>Once you know your external IP address and the port number for the server, you can access it remotely by making an https request. For example, if my remote IP address was <code>1.1.1.1</code> and I was specified port <code>2222</code> in step 8, I would access this server from any computer using the url <code>https://1.1.1.1:2222</code>. This would direct me to the ipython notebook login screen where I would enter the password from step 1 and be up and running inside the ipython notebook.</p>
+<h2 id="automatic-external-ip-updates"><a href="#automatic-external-ip-updates">Automatic external IP updates</a></h2>
+<pre class="sourceCode python"><code class="sourceCode python"><span class="ch">import</span> smtplib
+<span class="ch">import</span> os
+<span class="ch">from</span> net_utils <span class="ch">import</span> fetch_ext_ip  <span class="co"># function from previous snippet</span>
+
+
+<span class="kw">def</span> send_email(msg, to, username, password, provider=<span class="st">&#39;gmail&#39;</span>):
+    <span class="co">&quot;&quot;&quot;</span>
+<span class="co">    Send an email</span>
+
+<span class="co">    Parameters</span>
+<span class="co">    ==========</span>
+<span class="co">    msg : str</span>
+<span class="co">        The actual message you would like to send</span>
+
+<span class="co">    to : str</span>
+<span class="co">        The recipient&#39;s email address as a string</span>
+
+<span class="co">    username : str</span>
+<span class="co">        The username for the sender as a string</span>
+
+<span class="co">    password : str</span>
+<span class="co">        The password for the sender&#39;s email account</span>
+
+<span class="co">    provider : str</span>
+<span class="co">        The email provider to be used. Right now this function only works for</span>
+<span class="co">        gmail, but could be easily extended for other email providers. (I only</span>
+<span class="co">        use gmail so I didn&#39;t feel like looking up other providers info)</span>
+
+<span class="co">    Returns</span>
+<span class="co">    =======</span>
+<span class="co">    None, just sends an email</span>
+<span class="co">    &quot;&quot;&quot;</span>
+    <span class="kw">if</span> provider == <span class="st">&#39;gmail&#39;</span>:
+        smtpserver = smtplib.SMTP(<span class="st">&quot;smtp.gmail.com&quot;</span>,<span class="dv">587</span>)
+
+    smtpserver.ehlo()
+    smtpserver.starttls()
+    smtpserver.ehlo
+    smtpserver.login(username, password)
+    smtpserver.sendmail(username, to, msg)
+    smtpserver.close()
+
+home = os.path.expanduser(<span class="st">&quot;~&quot;</span>)
+ip_fn = home + os.path.sep + <span class="st">&quot;.ext_ip.txt&quot;</span>  <span class="co"># file name where ip is stored</span>
+
+<span class="kw">if</span> os.path.exists(ip_fn):
+    former_ip = <span class="dt">open</span>(ip_fn, <span class="st">&#39;r&#39;</span>).read().strip()
+
+    new_ip = fetch_ext_ip().strip()
+    <span class="kw">if</span> former_ip != new_ip:
+        changed = <span class="ot">True</span>
+        <span class="kw">with</span> <span class="dt">open</span>(ip_fn, <span class="st">&#39;w&#39;</span>) <span class="ch">as</span> f:
+            f.write(new_ip)
+    <span class="kw">else</span>:
+        changed = <span class="ot">False</span>
+<span class="kw">else</span>:
+    changed = <span class="ot">True</span>
+    new_ip = fetch_ext_ip()
+    <span class="kw">with</span> <span class="dt">open</span>(ip_fn, <span class="st">&#39;w&#39;</span>) <span class="ch">as</span> f:
+        f.write(new_ip)
+
+<span class="kw">if</span> changed is <span class="ot">True</span>:  <span class="co"># only send email if there is a change</span>
+    info = <span class="dt">open</span>(home + os.path.sep + <span class="st">&#39;.email_settings&#39;</span>).readlines()
+    parsed = <span class="dt">map</span>(<span class="kw">lambda</span> x: x.split()[<span class="dv">1</span>].strip(), info)
+    msg = <span class="st">&quot;To:{to}</span><span class="ch">\n</span><span class="st">From:{sender}</span><span class="ch">\n</span><span class="st">Subject: IPynb External IP changed</span><span class="ch">\n\n</span><span class="st">&quot;</span>
+    msg += <span class="st">&quot;The new IP address is {ip}&quot;</span>
+    send_email(msg.<span class="dt">format</span>(to=parsed[<span class="dv">0</span>], sender=parsed[<span class="dv">1</span>], ip=new_ip), *parsed)</code></pre>
+<p>The above creates a file in your home directory named <code>.ext_ip.txt</code>. It is simply a text file containing the external IP address of the network where this file was last executed. It also assumes that there is a file at <code>~/.email_settings</code> that has 4 lines in the following structure:</p>
+<pre><code>to: YOURemailHERE
+from: YOURemailHERE
+password: emailPASSWORDhere
+provider: EMAILproviderHERE</code></pre>
+<p>It would then be up to you to use a service like <code>cron</code> to run this file on a schedule from the computer hosting the notebook server.</p>
+
+    </div>
+
+
+
+</body>
+</html>
